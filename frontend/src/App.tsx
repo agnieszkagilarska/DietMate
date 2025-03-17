@@ -1,13 +1,20 @@
-import React, { useState, MouseEvent, useEffect  } from 'react';
-import { createTheme, ThemeProvider, Fab } from '@mui/material';
-import CssBaseline from '@mui/material/CssBaseline';
-import { AppBar, Menu, MenuItem } from "@mui/material";
-import { BrowserRouter as Router, Routes} from 'react-router-dom';
+import React, { useState, MouseEvent, useEffect } from 'react';
+import {
+  createTheme,
+  ThemeProvider,
+  Fab,
+  AppBar,
+  CssBaseline,
+  Menu,
+  MenuItem
+} from '@mui/material';
+import LanguageIcon from '@mui/icons-material/Language';
 import Flag from 'react-world-flags';
 import { useTranslation } from 'react-i18next';
-import LanguageIcon from '@mui/icons-material/Language';
-import GPT from "./Components/GPT/GPT";
+import AppRoutes from './routes/AppRoutes';
+import GPT from './components/GPT/GPT';
 import './i18n';
+import './tailwind.css';
 
 const App = () => {
     const [darkMode, setDarkMode] = useState<boolean>(false);
@@ -54,17 +61,20 @@ const App = () => {
 
       }, []);
 
-    const theme = createTheme({
+      const theme = createTheme({
         palette: {
-            primary: {
-                main: darkMode ? '#ffffff' : '#000000',
-            },
-            mode: darkMode ? 'dark' : 'light',
-            background: {
-                default: darkMode ? '#1f1f23' : '#eaeaea',
-            },
+          primary: {
+            main: '#4CAF50'
+          },
+          mode: darkMode ? 'dark' : 'light',
+          background: {
+            default: darkMode ? '#1f1f23' : '#f0fdf4'
+          }
         },
-    });
+        typography: {
+          fontFamily: 'Arial, sans-serif'
+        }
+      });
 
     const handleDarkModeToggle = (): void => {
         setDarkMode(!darkMode);
@@ -82,50 +92,45 @@ const App = () => {
     };
 
     return (
-        <Router>
-            <ThemeProvider theme={theme}>
-                <CssBaseline />
-                <AppBar position="static">
-                </AppBar>
-                <Fab
-                    color="primary"
-                    aria-label="language"
-                    style={{
-                        position: 'fixed',
-                        bottom: '20px',
-                        right: '20px',
-                        zIndex: 1000,
-                    }}
-                    onClick={handleLanguageClick}
-                >
-                    <LanguageIcon />
-                </Fab>
-                <Menu
-                    id="language-menu"
-                    anchorEl={anchorElLanguage}
-                    keepMounted
-                    open={Boolean(anchorElLanguage)}
-                    onClose={() => handleLanguageClose()}
-                >
-                    <MenuItem onClick={() => handleLanguageClose('en')}>
-                        <Flag code="US" height="16" width="24" style={{ marginRight: 8 }} />
-                        {t('English')}
-                    </MenuItem>
-                    <MenuItem onClick={() => handleLanguageClose('pl')}>
-                        <Flag code="PL" height="16" width="24" style={{ marginRight: 8 }} />
-                        {t('Polish')}
-                    </MenuItem>
-                </Menu>
-
-                <Routes>
-                </Routes>
-                <GPT
-                    sessionToken={sessionToken}
-                    setSessionToken={setSessionToken}
-                />
-            </ThemeProvider>
-        </Router>
-    );
-};
-
-export default App;
+        <ThemeProvider theme={theme}>
+          <CssBaseline />
+          <AppBar
+            position="static"
+            sx={{ backgroundColor: theme.palette.primary.main }}
+          />
+          <Fab
+            color="primary"
+            aria-label="language"
+            style={{
+              position: 'fixed',
+              bottom: '20px',
+              right: '20px',
+              zIndex: 1000
+            }}
+            onClick={handleLanguageClick}
+          >
+            <LanguageIcon />
+          </Fab>
+          <Menu
+            id="language-menu"
+            anchorEl={anchorElLanguage}
+            keepMounted
+            open={Boolean(anchorElLanguage)}
+            onClose={() => handleLanguageClose()}
+          >
+            <MenuItem onClick={() => handleLanguageClose('en')}>
+              <Flag code="US" height="16" width="24" style={{ marginRight: 8 }} />
+              {t('English')}
+            </MenuItem>
+            <MenuItem onClick={() => handleLanguageClose('pl')}>
+              <Flag code="PL" height="16" width="24" style={{ marginRight: 8 }} />
+              {t('Polish')}
+            </MenuItem>
+          </Menu>
+          <AppRoutes />
+          <GPT sessionToken={sessionToken} setSessionToken={setSessionToken} />
+        </ThemeProvider>
+      );
+    };
+    
+    export default App;

@@ -1,0 +1,36 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  /* Falling animation with rotation and sway */
+  @keyframes fall {
+    0% { 
+      top: -10%; 
+      opacity: 0; 
+      transform: translateX(0) rotate(0deg); 
+    }
+    10% { 
+      opacity: 1; 
+    }
+    25% {
+      transform: translateX(var(--sway-amount)) rotate(90deg);
+    }
+    50% {
+      transform: translateX(calc(var(--sway-amount) * -0.5)) rotate(180deg);
+    }
+    75% {
+      transform: translateX(var(--sway-amount)) rotate(270deg);
+    }
+    100% { 
+      top: 110%; 
+      opacity: 0.8; 
+      transform: translateX(0) rotate(360deg); 
+    }
+  }
+  
+  .animate-fall {
+    animation: fall var(--duration, 14s) linear infinite;
+    animation-timing-function: ease-in-out;
+  }
+}
