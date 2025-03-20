@@ -31,24 +31,21 @@ const ConfettiIcons: React.FC = () => {
   const [iconData, setIconData] = useState<IconProps[]>([]);
   
   useEffect(() => {
-    const numIcons = 12; // Using more icons to ensure all types are represented
+    const numIcons = 12;
     
     const data = Array(numIcons).fill(null).map((_, idx) => {
-      // Ensure we use all icon types by cycling through them
       const iconIndex = idx % ICON_URLS.length;
       const url = ICON_URLS[iconIndex];
       
-      // Distribute icons across the width
       const left = Math.random() * 90;
       
-      // Create variation in falling speed and behavior
-      const delay = Math.random() * 12; // Staggered delays up to 12s
-      const duration = 10 + Math.random() * 8; // 10-18 seconds
-      const size = 35 + Math.random() * 20; // 35-55px
+      const delay = Math.random() * 12;
+      const duration = 10 + Math.random() * 8;
+      const size = 35 + Math.random() * 20;
       const rotationSpeed = Math.random() > 0.5 ? 
-        3 + Math.random() * 4 : // Slower rotation: 3-7s
-        1 + Math.random() * 2;  // Faster rotation: 1-3s
-      const swayAmount = 5 + Math.random() * 15; // 5-20px horizontal sway
+        3 + Math.random() * 4 :
+        1 + Math.random() * 2;
+      const swayAmount = 5 + Math.random() * 15;
       
       return { 
         id: idx, 
