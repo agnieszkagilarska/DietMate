@@ -1,7 +1,7 @@
 from typing import Generator, Optional, Union
 import groq
 from pymongo import collection
-from .chat_handler import ask_gpt
+from .chat_handler import ask_gpt, gpt_search
 from .translator import translate_message
 
 def handle_message(
@@ -35,17 +35,22 @@ def handle_message(
             yield translated_message
             return
 
-        for chunk in ask_gpt(
-            translated_message,
-            original_language,
-            client,
-            collectionGPT,
-            session_id,
-            file_name,
-            file_content,
-            flags
-        ):
-            yield chunk
+        if translated_message.startswith('@'):
+            message_content: str = translated_message[1:].strip()
+            for chunk in gpt_search(message_content, client, original_language, flags):
+                yield chunk
+        else:
+            for chunk in ask_gpt(
+                translated_message,
+                original_language,
+                client,
+                collectionGPT,
+                session_id,
+                file_name,
+                file_content,
+                flags
+            ):
+                yield chunk
 
     except Exception as e:
         yield f"***ERROR***: processing message: {str(e)}"

@@ -102,6 +102,10 @@ class DietPrompter:
                 "Remember to use the file content only when it is relevant to nutrition or dietary topics.",
                 "Use the information provided in the file according to the user's instructions."
             ],
+            "search_rules": [
+                "Based on the query ***USER MESSAGE***, create a summary of the search results.",
+                "Use for this purpose the **SEARCH RESULTS** section of the response and your knowledge of the topic.",
+            ],
             "test": [
                 "Model Testing Principle"
             ],

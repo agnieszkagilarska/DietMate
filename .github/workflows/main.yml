@@ -162,6 +162,8 @@ jobs:
           mongo_connection_string                                 = "$mongo_connection_string_value"
           ssl_key_base64                                          = "$ssl_key_base64_value"
           ssl_cert_base64                                         = "$ssl_cert_base64_value"     
+          google_api_key                                          = "${{ secrets.GOOGLE_API_KEY }}" 
+          google_cx                                               = "${{ secrets.GOOGLE_CX }}"
           EOF
 
       - name: Setup Terraform

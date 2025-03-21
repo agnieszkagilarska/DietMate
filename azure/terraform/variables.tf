@@ -101,3 +101,15 @@
         sensitive   = true
         description = "SSL certificate in base64 format"
     }
+
+    variable "google_api_key" {
+        type        = string
+        sensitive   = true
+        description = "Google API key"
+    }
+
+    variable "google_cx" {
+        type        = string
+        sensitive   = true
+        description = "Google Custom Search Engine ID"
+    }

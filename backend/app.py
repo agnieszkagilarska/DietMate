@@ -97,7 +97,6 @@ def ask_gpt_endpoint(session_id: str) -> Response:
     except Exception as e:
         return Response(f"***ERROR***: {e}", status=500)
 
-
 DIETS = [
     {"id": 1, "name": "Keto", "description": "Ketogenic diet", "price": 150},
     {"id": 2, "name": "Vegan", "description": "Vegan diet", "price": 130},

@@ -1,10 +1,11 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState } from 'react';
 import { Box, TextField, IconButton, Typography, Paper } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
 import AttachFileIcon from '@mui/icons-material/AttachFile';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
 import CloseIcon from '@mui/icons-material/Close';
+import AlternateEmailIcon from '@mui/icons-material/AlternateEmail';
 import { useTheme } from '@mui/material/styles';
 import { useTranslation } from 'react-i18next';
 
@@ -37,10 +38,13 @@ const InputArea: React.FC<InputAreaProps> = ({
   const theme = useTheme();
   const { t } = useTranslation();
   const inputAreaRef = useRef(null);
-
+  const [prefixEnabled, setPrefixEnabled] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
+    let value = e.target.value;
+    if (prefixEnabled && !value.startsWith('@')) {
+      value = `@${value}`;
+    }
     setInputText(value);
   };
 
@@ -48,6 +52,15 @@ const InputArea: React.FC<InputAreaProps> = ({
     if (event.key === 'Enter' && !event.shiftKey) {
       event.preventDefault();
       handleSendMessage();
+    }
+  };
+
+  const togglePrefix = () => {
+    setPrefixEnabled((prev) => !prev);
+    if (!prefixEnabled && inputText.trim() !== '' && !inputText.startsWith('@')) {
+      setInputText(`@${inputText}`);
+    } else if (prefixEnabled && inputText.startsWith('@')) {
+      setInputText(inputText.slice(1));
     }
   };
 
@@ -118,7 +131,10 @@ const InputArea: React.FC<InputAreaProps> = ({
           placeholder={t('type_message')}
           sx={{ pr: 4 }}
         />
-        <Box sx={{ position: 'absolute', right: '-16px', bottom: 8 }}>
+        <Box sx={{ position: 'absolute', right: '-16px', bottom: 8, display: 'flex', gap: 1 }}>
+          <IconButton onClick={togglePrefix} color={prefixEnabled ? "primary" : "default"}>
+            <AlternateEmailIcon />
+          </IconButton>
           <IconButton onClick={handleSendMessage} color="primary">
             <SendIcon />
           </IconButton>

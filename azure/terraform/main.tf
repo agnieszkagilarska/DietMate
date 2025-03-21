@@ -396,6 +396,8 @@ resource "azurerm_container_group" "backend" {
       REACT_APP_DOMAIN        = "https://${var.duckdns_domain}.duckdns.org"
       SSL_KEY_BASE64          = var.ssl_key_base64
       SSL_CERT_BASE64         = var.ssl_cert_base64
+      GOOGLE_API_KEY          = var.google_api_key
+      GOOGLE_CX               = var.google_cx
     }
   }
 

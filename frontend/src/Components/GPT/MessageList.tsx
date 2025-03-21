@@ -1,11 +1,11 @@
 import React from 'react';
 import { Box, Typography, Avatar, IconButton } from '@mui/material';
-import { FaCommentMedical } from "react-icons/fa";
+import HealingIcon from '@mui/icons-material/Healing';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus, vs } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { useTheme } from '@mui/material/styles';
-
+import formatMessageContent from "../../Utils/formatMessageContent";
 
 interface Message {
   type: 'user' | 'bot';
@@ -142,7 +142,7 @@ const MessageList: React.FC<MessageListProps> = ({
                   mb: 1,
                 }}
                 dangerouslySetInnerHTML={{
-                  __html: part.content
+                  __html: formatMessageContent(part.content)
                 }}
               />
             )
@@ -150,9 +150,9 @@ const MessageList: React.FC<MessageListProps> = ({
         </Box>
 
         {message.type === 'user' && (
-          <Avatar sx={{ width: '30px', height: '30px', ml: 1, bgcolor: 'secondary.main' }}>
-            U
-          </Avatar>
+            <Avatar sx={{ width: '30px', height: '30px', ml: 1, bgcolor: 'secondary.main' }}>
+              <HealingIcon fontSize="small" />
+            </Avatar>
         )}
       </Box>
     );
