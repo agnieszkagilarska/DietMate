@@ -7,25 +7,25 @@ const HomePage: React.FC = () => {
   const { t } = useTranslation();
 
   const features = [
-    { title: t('personalizedDiets'), description: t('personalizedDietsDesc'), icon: Heart },
-    { title: t('healthyIngredients'), description: t('healthyIngredientsDesc'), icon: Check },
-    { title: t('expertSupport'), description: t('expertSupportDesc'), icon: Star },
+    { title: t('Personalized Meal Plans'), description: t('Custom nutrition plans tailored to your unique dietary needs and fitness goals'), icon: Heart },
+    { title: t('Premium Quality Ingredients'), description: t('All meals prepared with organic, locally-sourced ingredients for maximum nutrition'), icon: Check },
+    { title: t('Nutritionist Support'), description: t('Access to certified nutritionists available 24/7 to answer all your dietary questions'), icon: Star },
   ];
 
   const testimonials = [
     {
       name: 'Anna K.',
-      text: t('testimonial1'),
+      text: t('NutriLife completely transformed my relationship with food. I\'ve lost 15 pounds in just two months without feeling hungry!'),
       rating: 5,
     },
     {
       name: 'Marek W.',
-      text: t('testimonial2'),
+      text: t('As an athlete, proper nutrition is crucial. Their performance diet plan has significantly improved my recovery time and energy levels.'),
       rating: 5,
     },
     {
       name: 'Kasia B.',
-      text: t('testimonial3'),
+      text: t('The meal variety is amazing, and everything tastes delicious. I never feel like I\'m on a "diet" even though I\'m eating healthier than ever.'),
       rating: 4,
     },
   ];
@@ -46,24 +46,24 @@ const HomePage: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 py-16 sm:px-6 lg:px-8 md:py-24 lg:py-32 relative z-20">
           <div className="lg:w-2/3">
             <h1 className="text-4xl font-bold font-heading tracking-tight sm:text-5xl md:text-6xl">
-              {t('heroTitle')}
+              {t('Transform Your Health With Expert Nutrition')}
             </h1>
             <p className="mt-6 text-xl md:text-2xl max-w-xl">
-              {t('heroSubtitle')}
+              {t('Custom meal plans designed for your body, goals, and lifestyle. Experience the power of personalized nutrition.')}
             </p>
             <div className="mt-10 flex flex-col sm:flex-row gap-4">
               <Link
                 to="/diets"
                 className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-primary-700 bg-white hover:bg-primary-50 shadow-button transition-all"
               >
-                {t('exploreDiets')}
+                {t('Browse Meal Plans')}
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
               <Link
                 to="/register"
                 className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-accent-500 hover:bg-accent-600 shadow-button transition-all"
               >
-                {t('getStarted')}
+                {t('Start Your Journey')}
               </Link>
             </div>
           </div>
@@ -75,10 +75,10 @@ const HomePage: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <h2 className="text-3xl font-bold font-heading text-secondary-800 sm:text-4xl">
-              {t('whyChooseUs')}
+              {t('Why Choose NutriLife')}
             </h2>
             <p className="mt-4 max-w-2xl mx-auto text-xl text-secondary-600">
-              {t('whyChooseUsSubtitle')}
+              {t('We combine nutritional science with culinary excellence to deliver results you can see and feel')}
             </p>
           </div>
 
@@ -106,19 +106,19 @@ const HomePage: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center mb-12">
             <h2 className="text-3xl font-bold font-heading text-secondary-800">
-              {t('popularDiets')}
+              {t('Popular Meal Plans')}
             </h2>
             <Link
               to="/diets"
               className="inline-flex items-center text-primary-600 hover:text-primary-700 font-medium"
             >
-              {t('viewAll')}
+              {t('View All Plans')}
               <ArrowRight className="ml-2 h-5 w-5" />
             </Link>
           </div>
 
           <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-            {[1, 2, 3].map((item) => (
+            {[1, 2, 3].map((item, index) => (
               <Link
                 key={item}
                 to={`/diets/${item}`}
@@ -139,14 +139,16 @@ const HomePage: React.FC = () => {
                     <span className="ml-2 text-sm text-secondary-600">5.0</span>
                   </div>
                   <h3 className="text-xl font-bold font-heading text-secondary-800">
-                    {`${t('diet')} ${item}`}
+                    {index === 0 ? "Keto Balance" : index === 1 ? "Mediterranean Vitality" : "Plant-Based Power"}
                   </h3>
                   <p className="mt-2 text-secondary-600">
-                    {t('dietShortDesc')}
+                    {index === 0 ? "Low-carb, high-fat meals for effective weight loss and energy" : 
+                      index === 1 ? "Heart-healthy meals inspired by Mediterranean cuisine" : 
+                      "Nutrient-dense plant-based meals for optimal health"}
                   </p>
                   <div className="mt-4 flex justify-between items-center">
                     <span className="text-lg font-bold text-primary-600">199 zł</span>
-                    <span className="text-sm text-secondary-500">{t('perWeek')}</span>
+                    <span className="text-sm text-secondary-500">{t('per week')}</span>
                   </div>
                 </div>
               </Link>
@@ -160,10 +162,10 @@ const HomePage: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <h2 className="text-3xl font-bold font-heading text-secondary-800 sm:text-4xl">
-              {t('customerStories')}
+              {t('Success Stories')}
             </h2>
             <p className="mt-4 max-w-2xl mx-auto text-xl text-secondary-600">
-              {t('customerStoriesSubtitle')}
+              {t('Hear from members who have transformed their health with NutriLife')}
             </p>
           </div>
 
@@ -193,17 +195,17 @@ const HomePage: React.FC = () => {
       <section className="py-16 bg-primary-700 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl font-bold font-heading sm:text-4xl">
-            {t('ctaTitle')}
+            {t('Ready to Transform Your Health?')}
           </h2>
           <p className="mt-4 max-w-2xl mx-auto text-xl text-primary-100">
-            {t('ctaSubtitle')}
+            {t('Join thousands of members who have already improved their health, energy, and well-being')}
           </p>
           <div className="mt-10">
             <Link
               to="/register"
               className="inline-flex items-center justify-center px-8 py-4 border border-transparent text-base font-medium rounded-md text-primary-700 bg-white hover:bg-primary-50 shadow-button transition-all"
             >
-              {t('startNow')}
+              {t('Begin Your Transformation')}
             </Link>
           </div>
         </div>

@@ -19,6 +19,7 @@ import './tailwind.css';
 const App = () => {
     const [anchorElLanguage, setAnchorElLanguage] = useState<null | HTMLElement>(null);
     const { i18n, t } = useTranslation();
+    const [darkMode, setDarkMode] = useState(false);
 
     // Notice:
     // Using localStorage would be incorrect as different browser tabs would share the same data because the token is issued per browser, not per session

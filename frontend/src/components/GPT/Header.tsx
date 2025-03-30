@@ -1,17 +1,10 @@
 import React from 'react';
 import { Box, Typography } from '@mui/material';
+import Logo from '../common/Logo';
 
-interface HeaderProps {
-  logo: string;
-}
-
-const Header: React.FC<HeaderProps> = ({ logo }) => (
-  <Box sx={{ display: 'flex', alignItems: 'center', mb: 0, justifyContent: 'center', mt: -2 }}>
-    <img
-      src={logo}
-      alt="Logo"
-      style={{ width: '60px', height: '60px', marginRight: '8px', objectFit: 'cover' }}
-    />
+const Header: React.FC = () => (
+  <Box sx={{ display: 'flex', alignItems: 'center', py: 3, justifyContent: 'center', mt: -2 }}>
+    <Logo />
     <Typography variant="h5" sx={{ fontWeight: 'bold', color: 'primary.main' }}>
       DIET GPT
     </Typography>

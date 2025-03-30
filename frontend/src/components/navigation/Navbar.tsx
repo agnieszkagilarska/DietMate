@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ShoppingCart, Menu, X, User } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import Logo from '../common/Logo';
 
 const Navbar: React.FC = () => {
   const { t } = useTranslation();
@@ -11,9 +12,9 @@ const Navbar: React.FC = () => {
   const isActive = (path: string) => location.pathname === path;
 
   const navLinks = [
-    { name: t('home'), path: '/' },
-    { name: t('diets'), path: '/diets' },
-    { name: t('cart'), path: '/cart', icon: ShoppingCart }
+    { name: t('Home'), path: '/' },
+    { name: t('Diets'), path: '/diets' },
+    { name: t('Cart'), path: '/cart', icon: ShoppingCart }
   ];
 
   return (
@@ -23,9 +24,7 @@ const Navbar: React.FC = () => {
           <div className="flex items-center">
             <Link to="/" className="flex items-center">
               <div className="flex items-center">
-                <svg className="h-8 w-8 text-primary-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m-8-4l8 4m8 8l-8 4m-8-4l8 4m-8-4v-8m16 0v8" />
-                </svg>
+                <Logo />
                 <span className="ml-2 text-xl font-heading font-bold text-primary-700">DieteMate</span>
               </div>
             </Link>
@@ -58,13 +57,13 @@ const Navbar: React.FC = () => {
                 to="/login"
                 className="px-4 py-2 text-sm font-medium rounded-md text-primary-700 hover:bg-primary-50"
               >
-                {t('login')}
+                {t('Login')}
               </Link>
               <Link
                 to="/register"
                 className="px-4 py-2 text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 shadow-button transition-all"
               >
-                {t('register')}
+                {t('Register')}
               </Link>
             </div>
           </div>
@@ -123,14 +122,14 @@ const Navbar: React.FC = () => {
                   className="block px-3 py-2 rounded-md text-base font-medium text-secondary-600 hover:text-primary-600 hover:bg-primary-50"
                   onClick={() => setIsMenuOpen(false)}
                 >
-                  {t('login')}
+                  {t('Login')}
                 </Link>
                 <Link
                   to="/register"
                   className="block px-3 py-2 rounded-md text-base font-medium text-secondary-600 hover:text-primary-600 hover:bg-primary-50"
                   onClick={() => setIsMenuOpen(false)}
                 >
-                  {t('register')}
+                  {t('Register')}
                 </Link>
               </div>
             </div>

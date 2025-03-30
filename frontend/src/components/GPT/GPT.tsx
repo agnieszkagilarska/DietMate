@@ -5,7 +5,6 @@ import { useTheme } from '@mui/material/styles';
 import { useTranslation } from 'react-i18next';
 
 // @ts-ignore
-import logo from '../../img/logo.png';
 
 import DrawerToggle from './DrawerToggle';
 import MessageList from './MessageList';
@@ -319,7 +318,7 @@ const GPT: React.FC<GPTProps> = ({ sessionToken, setSessionToken }) => {
         }}
       >
         <Box sx={{ padding: '15px', height: '100%', display: 'flex', flexDirection: 'column' }}>
-          <Header logo={logo} />
+          <Header />
           <MessageList
             conversation={conversation}
             conversationEndRef={conversationEndRef}
