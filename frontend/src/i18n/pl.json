@@ -12,6 +12,7 @@
     "uploaded_file": "Przesłany plik",
     "errorMessage": "Wystąpił błąd podczas przetwarzania Twojego żądania. Spróbuj ponownie.",
     "rate_limit_exceeded": "Przekroczono limit zapytań. Spróbuj ponownie za {{retry_after}}",
-    "invalid_or_expired_token": "Nieprawidłowy lub wygasły token."
+    "invalid_or_expired_token": "Nieprawidłowy lub wygasły token.",
+    "generating": "Generowanie..."
 }
   

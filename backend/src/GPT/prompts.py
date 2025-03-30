@@ -1,6 +1,5 @@
 from typing import List, Dict, Optional
 from pymongo import collection
-import datetime
 
 class DietPrompter:
     """
@@ -38,11 +37,11 @@ class DietPrompter:
         Returns:
              str: A string containing concatenated user and bot messages from recent conversations
         """
-        query = {"session_id": session_id}
-        
-        records_list = list(collection.find(query))
-        
-        records = sorted(records_list, key=lambda x: x.get("date_added", datetime.datetime.min), reverse=True)
+        records = list(collection.aggregate([
+            {"$match": {"session_id": session_id}},
+            {"$sort": {"date_added": -1}},
+            {"$limit": 15}
+        ]))
         
         records_text = ""
         total_words = 0
@@ -101,6 +100,10 @@ class DietPrompter:
             "file_context_rules": [
                 "Remember to use the file content only when it is relevant to nutrition or dietary topics.",
                 "Use the information provided in the file according to the user's instructions."
+            ],
+            "search_rules": [
+                "Based on the query ***USER MESSAGE***, create a summary of the search results.",
+                "Use for this purpose the **SEARCH RESULTS** section of the response and your knowledge of the topic.",
             ],
             "test": [
                 "Model Testing Principle"

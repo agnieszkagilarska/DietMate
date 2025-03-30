@@ -1,0 +1,212 @@
+name: CI/CD
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    environment: DIETMATE
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Install certbot and openssl
+        run: |
+          sudo apt update
+          sudo apt install -y certbot openssl
+
+      - name: Set environment variables
+        run: |
+          echo "TOKEN_DUCKDNS=${{ secrets.TOKEN_DUCKDNS }}" >> $GITHUB_ENV
+          echo "DOMAIN=${{ secrets.DOMAIN }}" >> $GITHUB_ENV
+
+      - name: Ensure manual hooks are executable
+        run: |
+          chmod +x azure/hooks/manual-auth-hook.sh
+          chmod +x azure/hooks/manual-cleanup-hook.sh
+
+      - name: Run Certbot without email
+        run: |
+          sudo -E certbot --manual --preferred-challenges dns certonly \
+          -d ${{ secrets.DOMAIN }} \
+          --manual-auth-hook azure/hooks/manual-auth-hook.sh \
+          --manual-cleanup-hook azure/hooks/manual-cleanup-hook.sh \
+          --agree-tos \
+          --register-unsafely-without-email \
+          --non-interactive
+
+      - name: Base64 encode SSL certificates
+        run: |
+          sudo base64 -i /etc/letsencrypt/live/${{ secrets.DOMAIN }}/fullchain.pem > fullchain.pem.base64
+          sudo base64 -i /etc/letsencrypt/live/${{ secrets.DOMAIN }}/privkey.pem > privkey.pem.base64
+
+      - name: Generate PFX certificate and base64 encode it
+        run: |
+          sudo openssl pkcs12 -export -out certificate.pfx \
+          -inkey /etc/letsencrypt/live/${{ secrets.DOMAIN }}/privkey.pem \
+          -in /etc/letsencrypt/live/${{ secrets.DOMAIN }}/fullchain.pem \
+          -passout pass:${{ secrets.PFX_PASS }}
+          sudo base64 -i certificate.pfx > certificate.pfx.base64
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ssl-certificates
+          path: |
+            fullchain.pem.base64
+            privkey.pem.base64
+            certificate.pfx.base64
+
+      - name: Log in to Docker Hub (backend)
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.BACKEND_DOCKER_USER }}
+          password: ${{ secrets.BACKEND_DOCKER_PASS }}
+
+      - name: Build backend image
+        run: |
+          docker buildx build \
+            -t ${{ secrets.BACKEND_DOCKER_USER }}/dietmate-backend:latest \
+            --platform linux/amd64 \
+            --push \
+            -f backend/Dockerfile \
+            ./backend
+
+      - name: Log in to Docker Hub (frontend)
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.FRONTEND_DOCKER_USER }}
+          password: ${{ secrets.FRONTEND_DOCKER_PASS }}
+
+      - name: Build frontend image
+        run: |
+          docker buildx build \
+            -t ${{ secrets.FRONTEND_DOCKER_USER }}/dietmate-frontend:latest \
+            --platform linux/amd64 \
+            --push \
+            -f frontend/Dockerfile \
+            ./frontend
+
+  terraform:
+    needs: build
+    environment: DIETMATE
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: ssl-certificates
+
+      - name: Restore Terraform state from GitHub Deployment API
+        run: |
+          mkdir -p azure/state
+          response=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${{ github.repository }}/deployments?environment=DIETMATE&per_page=1")
+          state=$(echo "$response" | jq -r '.[0].payload.terraform_state // empty')
+          if [ -n "$state" ]; then
+            echo "Restoring Terraform state..."
+            echo "$state" | base64 -d > azure/state/terraform.tfstate
+          else
+            echo "No existing Terraform state found. Continuing with initialization."
+          fi
+
+      - name: Azure Login with interactive authentication and timeout
+        run: |
+          echo "Attempting interactive Azure login (max wait 5 minutes)..."
+          output=$(timeout 300 az login --use-device-code | head -n 1)
+          exit_code=${PIPESTATUS[0]}
+          echo "$output"
+          if [ $exit_code -eq 0 ]; then
+            echo "Azure login succeeded. Continuing deployment."
+          else
+            echo "Azure login did not complete within 5 minutes. Skipping deployment."
+            exit $exit_code
+          fi
+
+      - name: Set ARM_USE_CLI environment variable
+        run: echo "ARM_USE_CLI=true" >> $GITHUB_ENV
+
+      - name: Create temporary terraform.tfvars file in azure/terraform
+        run: |
+          duckdns_domain_cleaned=$(echo "${{ secrets.DOMAIN }}" | sed 's/\.duckdns\.org$//')
+          certificate_pfx_value=$(tr -d '\n' < certificate.pfx.base64)
+          ssl_key_base64_value=$(tr -d '\n' < privkey.pem.base64)
+          ssl_cert_base64_value=$(tr -d '\n' < fullchain.pem.base64)
+          mongo_connection_string_value=$(echo "${{ secrets.MONGO_CONNECTION_STRING }}" | tr -d '\n')
+          redis_cloud_host_value=$(echo "${{ secrets.REDIS_CLOUD_HOST }}" | tr -d '\n')
+          redis_cloud_password_value=$(echo "${{ secrets.REDIS_CLOUD_PASSWORD }}" | tr -d '\n')
+          cat <<EOF > azure/terraform/terraform.tfvars
+          backend_image                                           = "dietmate/dietmate-backend:latest"
+          frontend_image                                          = "dietmate1/dietmate-frontend:latest"
+          SAS_expiry                                              = "2100-12-31T23:59:00Z"
+          location                                                = "eastus2"
+          resource_prefix                                         = "dietmate"
+          docker_registry_username_backend                        = "${{ secrets.BACKEND_DOCKER_USER }}"
+          docker_registry_password_backend                        = "${{ secrets.BACKEND_DOCKER_PASS }}"
+          docker_registry_username_frontend                       = "${{ secrets.FRONTEND_DOCKER_USER }}"
+          docker_registry_password_frontend                       = "${{ secrets.FRONTEND_DOCKER_PASS }}"
+          duckdns_domain                                          = "$duckdns_domain_cleaned"
+          duckdns_token                                           = "${{ secrets.TOKEN_DUCKDNS }}"
+          ssl_certificate_password                                = "${{ secrets.PFX_PASS }}"
+          certificate_pfx                                         = "$certificate_pfx_value"
+          subscription_id                                         = "${{ secrets.SUBSCRIPTION_ID }}"
+          groq_api_key                                            = "${{ secrets.GROQ_API_KEY }}"
+          groq_gpt_model                                          = "${{ secrets.GROQ_GPT_MODEL }}"
+          mongo_connection_string                                 = "$mongo_connection_string_value"
+          ssl_key_base64                                          = "$ssl_key_base64_value"
+          ssl_cert_base64                                         = "$ssl_cert_base64_value"     
+          google_api_key                                          = "${{ secrets.GOOGLE_API_KEY }}" 
+          google_cx                                               = "${{ secrets.GOOGLE_CX }}"
+          redis_cloud_host                                        = "$redis_cloud_host_value"
+          redis_cloud_password                                    = "$redis_cloud_password_value"
+          EOF
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
+
+      - name: Initialize Terraform
+        working-directory: azure/terraform
+        run: terraform init
+
+      - name: Check Terraform state consistency and resource existence / Apply changes
+        working-directory: azure/terraform
+        run: |
+          # Run plan - exit code 0 = no changes, 2 = changes detected
+          set +e
+          terraform plan -detailed-exitcode
+          plan_exit=$?
+          set -e
+          if [ $plan_exit -eq 0 ]; then
+            echo "Terraform state is up to date. No changes required."
+          else
+            echo "State is outdated or cloud resources are missing. Recreating resources..."
+            terraform apply -auto-approve
+          fi
+
+      - name: Create GitHub deployment with Terraform state
+        run: |
+          if [ -f azure/state/terraform.tfstate ]; then
+            state=$(base64 -w 0 azure/state/terraform.tfstate | jq -Rsa .)
+            curl -X POST \
+              -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+              -H "Accept: application/vnd.github+json" \
+              https://api.github.com/repos/${{ github.repository }}/deployments \
+              -d "{
+                    \"ref\": \"${GITHUB_SHA}\",
+                    \"environment\": \"DIETMATE\",
+                    \"payload\": {\"terraform_state\": $state},
+                    \"description\": \"Updated Terraform state via deployment API\",
+                    \"required_contexts\": []
+                  }"
+          else
+            echo "No Terraform state file found. Skipping deployment creation."
+          fi

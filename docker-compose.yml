@@ -7,6 +7,15 @@ x-MONGO_CONNECTION_STRING: &MONGO_CONNECTION_STRING
 x-GROQ_API_KEY: &GROQ_API_KEY
   GROQ_API_KEY: ${GROQ_API_KEY} 
 
+x-GOOGLE_API_KEY: &GOOGLE_API_KEY
+  GOOGLE_API_KEY: ${GOOGLE_API_KEY}
+
+x-GOOGLE_CX: &GOOGLE_CX
+  GOOGLE_CX: ${GOOGLE_CX}
+
+x-REDIS_CLOUD_HOST: &REDIS_CLOUD_HOST
+  REDIS_CLOUD_HOST: ${REDIS_CLOUD_HOST}
+
 ######################################################################################
 
 version: '3'
@@ -15,6 +24,7 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+    container_name: frontend
     ports:
       - "3000:3000"
     environment:
@@ -26,19 +36,36 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+    container_name: backend
     ports:
       - "5000:5000"
     environment:
-      <<: [*REACT_APP_DOMAIN,*MONGO_CONNECTION_STRING,*GROQ_API_KEY]
+      <<: [*REACT_APP_DOMAIN,*MONGO_CONNECTION_STRING,*GROQ_API_KEY,*GOOGLE_API_KEY,*GOOGLE_CX,*REDIS_CLOUD_HOST]
     depends_on:
       -  mongodb
+      -  redis
+    
+  redis:
+    build:
+      context: ./redis
+      dockerfile: Dockerfile
+    hostname: redis
+    container_name: redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./redis_data:/data
 
   mongodb:
     image: mongo:latest
     container_name: mongodb
+    restart: unless-stopped
     ports:
       - "27017:27017"
     environment:
         MONGO_INITDB_ROOT_USERNAME: admin
         MONGO_INITDB_ROOT_PASSWORD: admin
-    restart: unless-stopped
+
+volumes:
+  redis_data:

@@ -17,19 +17,11 @@ import './i18n';
 import './tailwind.css';
 
 const App = () => {
-    const [darkMode, setDarkMode] = useState<boolean>(false);
     const [anchorElLanguage, setAnchorElLanguage] = useState<null | HTMLElement>(null);
     const { i18n, t } = useTranslation();
 
-
-    const handleThemeChange = (isDark: boolean): void => {
-        setDarkMode(isDark);
-    };
-
-    const handleLanguageChange = (lang: string): void => {
-        i18n.changeLanguage(lang);
-    };
-
+    // Notice:
+    // Using localStorage would be incorrect as different browser tabs would share the same data because the token is issued per browser, not per session
     const [sessionToken, setSessionToken] = useState<string | null>(null);
 
       useEffect(() => {

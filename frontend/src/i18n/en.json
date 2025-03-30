@@ -12,5 +12,6 @@
     "uploaded_file": "Uploaded file",
     "errorMessage": "An error occurred while processing your request. Please try again.",
     "rate_limit_exceeded": "Rate limit exceeded. Please try again in {{retry_after}}",
-    "invalid_or_expired_token": "Invalid or expired token."
+    "invalid_or_expired_token": "Invalid or expired token.",
+    "generating": "Generating..."
 }

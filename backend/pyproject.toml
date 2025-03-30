@@ -19,6 +19,9 @@ immutables = "*"
 deep-translator = "*"
 langdetect = "*"
 PyJWT = "*"
+BeautifulSoup4 = "*"
+redis = "*"
+
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
