@@ -21,6 +21,7 @@ langdetect = "*"
 PyJWT = "*"
 BeautifulSoup4 = "*"
 redis = "*"
+bcrypt = "*"
 
 
 [build-system]
