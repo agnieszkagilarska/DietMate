@@ -9,19 +9,14 @@ import uuid
 import datetime
 import bcrypt
 from bson.objectid import ObjectId
+import os
 ############################################################################################################
-# Flask app initialization and CORS setup
-app = Flask(__name__)
-cors_origins = os.getenv("REACT_APP_DOMAIN", "http://localhost")
-if cors_origins.startswith('https'):
-    CORS(app, origins=[cors_origins], supports_credentials=True)
-else:
-    CORS(app, supports_credentials=True)
 
-# MongoDB connection configuration
-client = MongoClient(os.getenv('MONGO_CONNECTION_STRING'))
-db = client.dietmate
-collection1: collection.Collection = db['GPT']
+app_config = AppConfig()
+app = app_config.app
+redis_client = app_config.r
+collection1 = app_config.collection1
+db = app_config.db
 
 ########################################### SESSION ENDPOINTS ###########################################
 
@@ -473,6 +468,3 @@ def delete_diet(diet_id):
         return jsonify({"message": "Diet deleted successfully"}), 200
     except Exception as e:
         return jsonify({"error": str(e)}), 500
-
-if __name__ == "__main__":
-    app.run(debug=True)
