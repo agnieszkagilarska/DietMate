@@ -1,1 +1,1 @@
-window.REACT_APP_DOMAIN='';
+window.REACT_APP_DOMAIN='http://localhost';
