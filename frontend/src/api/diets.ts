@@ -1,5 +1,3 @@
-import { API_BASE_URL } from './config';
-
 export interface Diet {
   _id?: string;
   diet_name: string;
@@ -13,7 +11,9 @@ export interface Diet {
 }
 
 export const fetchAllDiets = async (): Promise<Diet[]> => {
-  const res = await fetch(`${API_BASE_URL}/api/diets`, {
+  // @ts-ignore
+  const domain = window.REACT_APP_DOMAIN;
+  const res = await fetch(`${domain}:5000/api/diets`, {
     credentials: 'include',
   });
 
@@ -27,7 +27,8 @@ export const fetchAllDiets = async (): Promise<Diet[]> => {
 };
 
 export const fetchDietById = async (dietId: string): Promise<Diet> => {
-  const res = await fetch(`${API_BASE_URL}/api/diets/${encodeURIComponent(dietId)}`, {
+  // @ts-ignore
+  const res = await fetch(`${domain}:5000/api/diets/${encodeURIComponent(dietId)}`, {
     credentials: 'include',
   });
 
@@ -40,7 +41,8 @@ export const fetchDietById = async (dietId: string): Promise<Diet> => {
 };
 
 export const createDiet = async (newDiet: Diet): Promise<{ diet_id: string }> => {
-  const res = await fetch(`${API_BASE_URL}/api/diets`, {
+  // @ts-ignore
+  const res = await fetch(`${domain}:5000/api/diets`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -61,7 +63,8 @@ export const updateDiet = async (
   dietId: string,
   updatedFields: Partial<Diet>
 ): Promise<void> => {
-  const res = await fetch(`${API_BASE_URL}/api/diets/${encodeURIComponent(dietId)}`, {
+  // @ts-ignore
+  const res = await fetch(`${domain}:5000/api/diets/${encodeURIComponent(dietId)}`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
@@ -77,7 +80,8 @@ export const updateDiet = async (
 };
 
 export const deleteDiet = async (dietId: string): Promise<void> => {
-  const res = await fetch(`${API_BASE_URL}/api/diets/${encodeURIComponent(dietId)}`, {
+  // @ts-ignore
+  const res = await fetch(`${domain}:5000/api/diets/${encodeURIComponent(dietId)}`, {
     method: 'DELETE',
     credentials: 'include',
   });

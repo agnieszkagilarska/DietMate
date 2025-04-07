@@ -22,7 +22,7 @@ PyJWT = "*"
 BeautifulSoup4 = "*"
 redis = "*"
 bcrypt = "*"
-
+flask_session = "*"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
