@@ -16,6 +16,9 @@ x-GOOGLE_CX: &GOOGLE_CX
 x-REDIS_CLOUD_HOST: &REDIS_CLOUD_HOST
   REDIS_CLOUD_HOST: ${REDIS_CLOUD_HOST}
 
+x-REDIS_CLOUD_PASSWORD: &REDIS_CLOUD_PASSWORD
+  REDIS_CLOUD_PASSWORD: ${REDIS_CLOUD_PASSWORD}
+
 ######################################################################################
 
 version: '3'
@@ -40,7 +43,7 @@ services:
     ports:
       - "5000:5000"
     environment:
-      <<: [*REACT_APP_DOMAIN,*MONGO_CONNECTION_STRING,*GROQ_API_KEY,*GOOGLE_API_KEY,*GOOGLE_CX,*REDIS_CLOUD_HOST]
+      <<: [*REACT_APP_DOMAIN,*MONGO_CONNECTION_STRING,*GROQ_API_KEY,*GOOGLE_API_KEY,*GOOGLE_CX,*REDIS_CLOUD_HOST,*REDIS_CLOUD_PASSWORD]
     depends_on:
       -  mongodb
       -  redis
