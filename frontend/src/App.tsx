@@ -12,6 +12,7 @@ import LanguageIcon from '@mui/icons-material/Language';
 import Flag from 'react-world-flags';
 import { useTranslation } from 'react-i18next';
 import AppRoutes from './routes/AppRoutes';
+import { CartProvider } from './context/CartContext';
 import GPT from './components/GPT/GPT';
 import './i18n';
 import './tailwind.css';
@@ -86,43 +87,45 @@ const App = () => {
 
     return (
         <ThemeProvider theme={theme}>
-          <CssBaseline />
-          <AppBar
-            position="static"
-            sx={{ backgroundColor: theme.palette.primary.main }}
-          />
-          <Fab
-            color="primary"
-            aria-label="language"
-            style={{
-              position: 'fixed',
-              bottom: '20px',
-              right: '20px',
-              zIndex: 1000
-            }}
-            onClick={handleLanguageClick}
-          >
-            <LanguageIcon />
-          </Fab>
-          <Menu
-            id="language-menu"
-            anchorEl={anchorElLanguage}
-            keepMounted
-            open={Boolean(anchorElLanguage)}
-            onClose={() => handleLanguageClose()}
-          >
-            <MenuItem onClick={() => handleLanguageClose('en')}>
-              <Flag code="US" height="16" width="24" style={{ marginRight: 8 }} />
-              {t('English')}
-            </MenuItem>
-            <MenuItem onClick={() => handleLanguageClose('pl')}>
-              <Flag code="PL" height="16" width="24" style={{ marginRight: 8 }} />
-              {t('Polish')}
-            </MenuItem>
-          </Menu>
-          <AppRoutes />
-          <GPT sessionToken={sessionToken} setSessionToken={setSessionToken} />
-        </ThemeProvider>
+          <CartProvider>
+            <CssBaseline />
+            <AppBar
+              position="static"
+              sx={{ backgroundColor: theme.palette.primary.main }}
+            />
+            <Fab
+              color="primary"
+              aria-label="language"
+              style={{
+                position: 'fixed',
+                bottom: '20px',
+                right: '20px',
+                zIndex: 1000
+              }}
+              onClick={handleLanguageClick}
+            >
+              <LanguageIcon />
+            </Fab>
+            <Menu
+              id="language-menu"
+              anchorEl={anchorElLanguage}
+              keepMounted
+              open={Boolean(anchorElLanguage)}
+              onClose={() => handleLanguageClose()}
+            >
+              <MenuItem onClick={() => handleLanguageClose('en')}>
+                <Flag code="US" height="16" width="24" style={{ marginRight: 8 }} />
+                {t('English')}
+              </MenuItem>
+              <MenuItem onClick={() => handleLanguageClose('pl')}>
+                <Flag code="PL" height="16" width="24" style={{ marginRight: 8 }} />
+                {t('Polish')}
+              </MenuItem>
+            </Menu>
+            <AppRoutes />
+            <GPT sessionToken={sessionToken} setSessionToken={setSessionToken} />
+        </CartProvider>
+      </ThemeProvider>
       );
     };
     

@@ -1,31 +1,69 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { ArrowRight, Check, Heart, Star } from 'lucide-react';
+import { fetchAllDiets, Diet } from '../api/diets';
+import DietCard from '../components/diets/DietCard';
 
 const HomePage: React.FC = () => {
   const { t } = useTranslation();
+  const [diets, setDiets] = useState<Diet[]>([]);
+
+  useEffect(() => {
+    fetchAllDiets()
+      .then((data) => {
+        setDiets(data);
+      })
+      .catch(async (err) => {
+        console.error('❌ Failed to fetch diets:', err);
+      });
+  }, []);
+  
 
   const features = [
-    { title: t('Personalized Meal Plans'), description: t('Custom nutrition plans tailored to your unique dietary needs and fitness goals'), icon: Heart },
-    { title: t('Premium Quality Ingredients'), description: t('All meals prepared with organic, locally-sourced ingredients for maximum nutrition'), icon: Check },
-    { title: t('Nutritionist Support'), description: t('Access to certified nutritionists available 24/7 to answer all your dietary questions'), icon: Star },
+    {
+      title: t('Personalized Meal Plans'),
+      description: t(
+        'Custom nutrition plans tailored to your unique dietary needs and fitness goals'
+      ),
+      icon: Heart,
+    },
+    {
+      title: t('Premium Quality Ingredients'),
+      description: t(
+        'All meals prepared with organic, locally-sourced ingredients for maximum nutrition'
+      ),
+      icon: Check,
+    },
+    {
+      title: t('Nutritionist Support'),
+      description: t(
+        'Access to certified nutritionists available 24/7 to answer all your dietary questions'
+      ),
+      icon: Star,
+    },
   ];
 
   const testimonials = [
     {
       name: 'Anna K.',
-      text: t('NutriLife completely transformed my relationship with food. I\'ve lost 15 pounds in just two months without feeling hungry!'),
+      text: t(
+        "NutriLife completely transformed my relationship with food. I've lost 15 pounds in just two months without feeling hungry!"
+      ),
       rating: 5,
     },
     {
       name: 'Marek W.',
-      text: t('As an athlete, proper nutrition is crucial. Their performance diet plan has significantly improved my recovery time and energy levels.'),
+      text: t(
+        'As an athlete, proper nutrition is crucial. Their performance diet plan has significantly improved my recovery time and energy levels.'
+      ),
       rating: 5,
     },
     {
       name: 'Kasia B.',
-      text: t('The meal variety is amazing, and everything tastes delicious. I never feel like I\'m on a "diet" even though I\'m eating healthier than ever.'),
+      text: t(
+        'The meal variety is amazing, and everything tastes delicious. I never feel like I\'m on a "diet" even though I\'m eating healthier than ever.'
+      ),
       rating: 4,
     },
   ];
@@ -37,9 +75,9 @@ const HomePage: React.FC = () => {
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute inset-0 bg-black opacity-20 z-10"></div>
           <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black opacity-20 z-10"></div>
-          <img 
-            src="/api/placeholder/1200/600" 
-            alt="Healthy meal with fresh vegetables and greens" 
+          <img
+            src="/images/hero-bg-2.jpg"
+            alt="Healthy meal with fresh vegetables and greens"
             className="w-full h-full object-cover"
           />
         </div>
@@ -49,7 +87,9 @@ const HomePage: React.FC = () => {
               {t('Transform Your Health With Expert Nutrition')}
             </h1>
             <p className="mt-6 text-xl md:text-2xl max-w-xl">
-              {t('Custom meal plans designed for your body, goals, and lifestyle. Experience the power of personalized nutrition.')}
+              {t(
+                'Custom meal plans designed for your body, goals, and lifestyle. Experience the power of personalized nutrition.'
+              )}
             </p>
             <div className="mt-10 flex flex-col sm:flex-row gap-4">
               <Link
@@ -78,7 +118,9 @@ const HomePage: React.FC = () => {
               {t('Why Choose NutriLife')}
             </h2>
             <p className="mt-4 max-w-2xl mx-auto text-xl text-secondary-600">
-              {t('We combine nutritional science with culinary excellence to deliver results you can see and feel')}
+              {t(
+                'We combine nutritional science with culinary excellence to deliver results you can see and feel'
+              )}
             </p>
           </div>
 
@@ -118,40 +160,8 @@ const HomePage: React.FC = () => {
           </div>
 
           <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-            {[1, 2, 3].map((item, index) => (
-              <Link
-                key={item}
-                to={`/diets/${item}`}
-                className="bg-white rounded-xl overflow-hidden shadow-card hover:shadow-lg transition-all"
-              >
-                <div className="h-48 overflow-hidden">
-                  <img
-                    src={`/api/placeholder/400/320`}
-                    alt={`Diet ${item}`}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div className="p-6">
-                  <div className="flex items-center text-accent-500 mb-2">
-                    {[...Array(5)].map((_, i) => (
-                      <Star key={i} className="h-4 w-4 fill-current" />
-                    ))}
-                    <span className="ml-2 text-sm text-secondary-600">5.0</span>
-                  </div>
-                  <h3 className="text-xl font-bold font-heading text-secondary-800">
-                    {index === 0 ? "Keto Balance" : index === 1 ? "Mediterranean Vitality" : "Plant-Based Power"}
-                  </h3>
-                  <p className="mt-2 text-secondary-600">
-                    {index === 0 ? "Low-carb, high-fat meals for effective weight loss and energy" : 
-                      index === 1 ? "Heart-healthy meals inspired by Mediterranean cuisine" : 
-                      "Nutrient-dense plant-based meals for optimal health"}
-                  </p>
-                  <div className="mt-4 flex justify-between items-center">
-                    <span className="text-lg font-bold text-primary-600">199 zł</span>
-                    <span className="text-sm text-secondary-500">{t('per week')}</span>
-                  </div>
-                </div>
-              </Link>
+            {diets.slice(0, 3).map((diet) => (
+              <DietCard key={diet.diet_name} diet={diet} />
             ))}
           </div>
         </div>
@@ -165,7 +175,9 @@ const HomePage: React.FC = () => {
               {t('Success Stories')}
             </h2>
             <p className="mt-4 max-w-2xl mx-auto text-xl text-secondary-600">
-              {t('Hear from members who have transformed their health with NutriLife')}
+              {t(
+                'Hear from members who have transformed their health with NutriLife'
+              )}
             </p>
           </div>
 
@@ -177,9 +189,13 @@ const HomePage: React.FC = () => {
               >
                 <div className="flex items-center text-accent-500 mb-4">
                   {[...Array(5)].map((_, i) => (
-                    <Star 
-                      key={i} 
-                      className={`h-5 w-5 ${i < testimonial.rating ? 'fill-current' : 'text-gray-300'}`}
+                    <Star
+                      key={i}
+                      className={`h-5 w-5 ${
+                        i < testimonial.rating
+                          ? 'fill-current'
+                          : 'text-gray-300'
+                      }`}
                     />
                   ))}
                 </div>
@@ -198,7 +214,9 @@ const HomePage: React.FC = () => {
             {t('Ready to Transform Your Health?')}
           </h2>
           <p className="mt-4 max-w-2xl mx-auto text-xl text-primary-100">
-            {t('Join thousands of members who have already improved their health, energy, and well-being')}
+            {t(
+              'Join thousands of members who have already improved their health, energy, and well-being'
+            )}
           </p>
           <div className="mt-10">
             <Link
