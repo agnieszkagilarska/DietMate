@@ -1,5 +1,6 @@
 import os
 import datetime
+from src.services.Cache import CacheService
 import redis
 from pymongo import MongoClient, collection
 from flask import Flask
@@ -67,3 +68,5 @@ class AppConfig:
         self.client = MongoClient(connection)
         self.db = self.client.dietmate
         self.collection1: collection.Collection = self.db['GPT']
+        self.collection2: collection.Collection = self.db['cache']
+        self.cache_service = CacheService(self.r, self.collection2)
