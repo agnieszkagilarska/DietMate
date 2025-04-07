@@ -1,5 +1,6 @@
 from config import AppConfig
 from src.GPT.tools import stream_response
+from src.services.Cache import CacheService
 from tools import generate_jwt, require_valid_token
 from flask import request, jsonify, Response
 from typing import Dict, Any
@@ -16,6 +17,8 @@ app_config = AppConfig()
 app = app_config.app
 redis_client = app_config.r
 collection1 = app_config.collection1
+collection2 = app_config.collection2
+cache_service = app_config.cache_service
 db = app_config.db
 
 ########################################### SESSION ENDPOINTS ###########################################
@@ -93,107 +96,98 @@ def ask_gpt_endpoint(session_id: str) -> Response:
 
 ########################################### REDIS ENDPOINTS ###########################################
     
+@app.route('/api/cache/<key>', methods=['GET'])
+@require_valid_token
+def get_value(session_id, key):
+    try:
+        value = cache_service.get_value(session_id, key)
+        if value is None:
+            return jsonify({"message": "Not found", "value": None}), 404
+        return jsonify({"session_id": session_id, "key": key, "value": value}), 200
+    except Exception as e:
+        return jsonify({"error": f"Error fetching value: {str(e)}"}), 500
+
+@app.route('/api/cache/<key>', methods=['POST'])
+@require_valid_token
+def set_value(session_id, key):
+    try:
+        data = request.json or {}
+        value = data.get("value")
+        if value is None:
+            return jsonify({"error": "Value is required in request body"}), 400
+        cache_service.set_value(session_id, key, value)
+        return jsonify({"message": f"Value set for key '{key}'", "value": value}), 200
+    except Exception as e:
+        return jsonify({"error": f"Error setting value: {str(e)}"}), 500
+
 @app.route('/api/redis/list', methods=['GET'])
 @require_valid_token
 def get_values_from_set(session_id: str):
     """
-    Protected endpoint to get all values from a given Redis set for a specific session_id.
-
-    Args:
-        session_id: Automatically injected by the decorator after token verification.
-        set_name: Query parameter defining the Redis set to retrieve.
-
-    Returns:
-        JSON response with the list of values associated with the session_id.
+    Pobiera wartości ze zbioru przy użyciu paginacji:
+      - page: numer strony (domyślnie 1)
+      - page_size: liczba elementów na stronę (domyślnie 20)
     """
     try:
         set_name = request.args.get("set_name")
-
         if not set_name:
             return jsonify({"error": "set_name query parameter is required"}), 400
 
-        set_values = redis_client.smembers(set_name)
+        try:
+            page = int(request.args.get("page", 1))
+            page_size = int(request.args.get("page_size", 20))
+        except ValueError:
+            return jsonify({"error": "page and page_size must be integers"}), 400
 
-        user_values = [
-            value.decode("utf-8").split(":", 1)[1]
-            for value in set_values
-            if value.decode("utf-8").startswith(f"{session_id}:")
-        ]
+        all_values = cache_service.get_set(session_id, set_name)
+        start = (page - 1) * page_size
+        end = start + page_size
+        batch = all_values[start:end]
 
         return jsonify({
             "set_name": set_name,
-            "values": user_values
+            "page": page,
+            "page_size": page_size,
+            "total": len(all_values),
+            "values": batch
         }), 200
     except Exception as e:
         return jsonify({"error": f"Failed to fetch values from set: {str(e)}"}), 500
 
-
 @app.route('/api/redis/add', methods=['POST'])
 @require_valid_token
 def add_to_set(session_id: str):
-    """
-    Protected endpoint to add a value to a given Redis set.
-
-    Args:
-        session_id: Automatically injected by the decorator after token verification.
-        set_name: Query parameter defining the Redis set to update.
-        value: JSON body parameter defining the value to add.
-
-    Returns:
-        JSON response indicating success or failure.
-    """
     try:
         set_name = request.args.get("set_name")
         data = request.json or {}
         value = data.get("value")
         if not set_name:
             return jsonify({"error": "set_name query parameter is required"}), 400
-        if not value:
+        if value is None:
             return jsonify({"error": "Value is required in the request body"}), 400
 
-        entry = f"{session_id}:{value}"
-
-        redis_client.sadd(set_name, entry)
-
+        cache_service.add_to_set(session_id, set_name, value)
         return jsonify({
             "message": f"Value '{value}' added to set '{set_name}'"
         }), 200
     except Exception as e:
         return jsonify({"error": f"Failed to add value to set: {str(e)}"}), 500
-    
 
 @app.route('/api/redis/update', methods=['PUT'])
 @require_valid_token
 def update_in_set(session_id: str):
-    """
-    Protected endpoint to update a value in a given Redis set.
-
-    Args:
-        session_id: Automatically injected by the decorator after token verification.
-        set_name: Query parameter defining the Redis set to update.
-        old_value: JSON body parameter defining the value to be replaced.
-        new_value: JSON body parameter defining the new value.
-
-    Returns:
-        JSON response indicating success or failure.
-    """
     try:
         set_name = request.args.get("set_name")
         data = request.json or {}
         old_value = data.get("old_value")
         new_value = data.get("new_value")
-
         if not set_name:
             return jsonify({"error": "set_name query parameter is required"}), 400
-        if not old_value or not new_value:
+        if old_value is None or new_value is None:
             return jsonify({"error": "Both old_value and new_value are required in the request body"}), 400
 
-        old_entry = f"{session_id}:{old_value}"
-        new_entry = f"{session_id}:{new_value}"
-
-        if redis_client.sismember(set_name, old_entry):
-            redis_client.srem(set_name, old_entry)
-            redis_client.sadd(set_name, new_entry)
+        updated = cache_service.update_in_set(session_id, set_name, old_value, new_value)
+        if updated:
             return jsonify({
                 "message": f"Value '{old_value}' updated to '{new_value}' in set '{set_name}'"
             }), 200
@@ -205,31 +199,17 @@ def update_in_set(session_id: str):
 @app.route('/api/redis/delete', methods=['DELETE'])
 @require_valid_token
 def delete_from_set(session_id: str):
-    """
-    Protected endpoint to delete a value from a given Redis set.
-
-    Args:
-        session_id: Automatically injected by the decorator after token verification.
-        set_name: Query parameter defining the Redis set to delete the value from.
-        value: JSON body parameter defining the value to delete.
-
-    Returns:
-        JSON response indicating success or failure.
-    """
     try:
         set_name = request.args.get("set_name")
         data = request.json or {}
         value = data.get("value")
-
         if not set_name:
             return jsonify({"error": "set_name query parameter is required"}), 400
-        if not value:
+        if value is None:
             return jsonify({"error": "Value is required in the request body"}), 400
 
-        entry = f"{session_id}:{value}"
-
-        if redis_client.sismember(set_name, entry):
-            redis_client.srem(set_name, entry)
+        deleted = cache_service.delete_from_set(session_id, set_name, value)
+        if deleted:
             return jsonify({
                 "message": f"Value '{value}' deleted from set '{set_name}'"
             }), 200
@@ -243,7 +223,7 @@ def delete_from_set(session_id: str):
 
 @app.route("/")
 def home():
-    return jsonify({"message": "Welcome to the Flask API for Next.js - DietMate!"})
+    return jsonify({"message": "Welcome to the Flask API for React - DietMate!"})
 
 @app.route("/api/purchase", methods=["POST"])
 def purchase_diet():

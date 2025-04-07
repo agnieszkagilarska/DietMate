@@ -1,0 +1,266 @@
+{
+	"info": {
+		"_postman_id": "65285f06-f5c5-4138-a2d0-f66f3b8f0f56",
+		"name": "DietMate",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "31483919"
+	},
+	"item": [
+		{
+			"name": "Session",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:5000/api/session",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"api",
+						"session"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "GetKey",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzZXNzaW9uX2lkIjoiYmYyMTEyNGEtNjM0ZC00YWQxLWIyMWMtYjgxYzlhZmE0YjcyIiwiZXhwIjoxNzQ0MTI3MTIyfQ.1T9l3OJAwX_yJtn_ABhxRFC8BCHWLSy0UgsvNCfI4EI",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:5000/api/cache/test-key",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"api",
+						"cache",
+						"test-key"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "AddKey",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzZXNzaW9uX2lkIjoiYmYyMTEyNGEtNjM0ZC00YWQxLWIyMWMtYjgxYzlhZmE0YjcyIiwiZXhwIjoxNzQ0MTI3MTIyfQ.1T9l3OJAwX_yJtn_ABhxRFC8BCHWLSy0UgsvNCfI4EI",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"value\": \"test\"\n}\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:5000/api/cache/test-key",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"api",
+						"cache",
+						"test-key"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "ListSet",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzZXNzaW9uX2lkIjoiYmYyMTEyNGEtNjM0ZC00YWQxLWIyMWMtYjgxYzlhZmE0YjcyIiwiZXhwIjoxNzQ0MTI3MTIyfQ.1T9l3OJAwX_yJtn_ABhxRFC8BCHWLSy0UgsvNCfI4EI",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "http://localhost:5000/api/redis/list?set_name=test-set&page=1&page_size=10",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"api",
+						"redis",
+						"list"
+					],
+					"query": [
+						{
+							"key": "set_name",
+							"value": "test-set"
+						},
+						{
+							"key": "page",
+							"value": "1"
+						},
+						{
+							"key": "page_size",
+							"value": "10"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Add2Set",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzZXNzaW9uX2lkIjoiYmYyMTEyNGEtNjM0ZC00YWQxLWIyMWMtYjgxYzlhZmE0YjcyIiwiZXhwIjoxNzQ0MTI3MTIyfQ.1T9l3OJAwX_yJtn_ABhxRFC8BCHWLSy0UgsvNCfI4EI",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"value\": \"element2\"\n}\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:5000/api/redis/add?set_name=test-set",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"api",
+						"redis",
+						"add"
+					],
+					"query": [
+						{
+							"key": "set_name",
+							"value": "test-set"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "UpdateSet",
+			"request": {
+				"method": "PUT",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzZXNzaW9uX2lkIjoiYmYyMTEyNGEtNjM0ZC00YWQxLWIyMWMtYjgxYzlhZmE0YjcyIiwiZXhwIjoxNzQ0MTI3MTIyfQ.1T9l3OJAwX_yJtn_ABhxRFC8BCHWLSy0UgsvNCfI4EI",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"old_value\": \"element1\",\n  \"new_value\": \"element_new\"\n}\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:5000/api/redis/update?set_name=test-set",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"api",
+						"redis",
+						"update"
+					],
+					"query": [
+						{
+							"key": "set_name",
+							"value": "test-set"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "DeleteKey",
+			"request": {
+				"method": "DELETE",
+				"header": [
+					{
+						"key": "Authorization",
+						"value": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzZXNzaW9uX2lkIjoiYmYyMTEyNGEtNjM0ZC00YWQxLWIyMWMtYjgxYzlhZmE0YjcyIiwiZXhwIjoxNzQ0MTI3MTIyfQ.1T9l3OJAwX_yJtn_ABhxRFC8BCHWLSy0UgsvNCfI4EI",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"value\": \"element2\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:5000/api/redis/delete?set_name=test-set",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5000",
+					"path": [
+						"api",
+						"redis",
+						"delete"
+					],
+					"query": [
+						{
+							"key": "set_name",
+							"value": "test-set"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
