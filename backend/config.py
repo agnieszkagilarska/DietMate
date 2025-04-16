@@ -31,7 +31,7 @@ class AppConfig:
             redis_cloud_host = os.getenv("REDIS_CLOUD_HOST", None)
             redis_cloud_password = os.getenv("REDIS_CLOUD_PASSWORD", None)
             if redis_cloud_host and redis_cloud_password:
-                print("✅ Using Redis Cloud configuration (Free tier - 30MB).")
+                print("Using Redis Cloud configuration (Free tier - 30MB).")
                 r = redis.Redis(
                     host=redis_cloud_host,
                     port=15355,
@@ -40,16 +40,16 @@ class AppConfig:
                 )
             else:
                 host = "redis" if self.is_docker() else "localhost"
-                print(f"✅ Detected {'Docker' if self.is_docker() else 'Host'} environment.")
+                print(f"Detected {'Docker' if self.is_docker() else 'Host'} environment.")
                 r = redis.Redis(host=host, port=6379)
             
             if r.ping():
-                print("✅ Redis connection successful.")
+                print("Redis connection successful.")
             else:
-                print("⚠️ Redis server is not responding.")
+                print("Redis server is not responding.")
                 r = None     
         except Exception as e:
-            print("⚠️ Warning: Redis connection failed:", e)
+            print("Warning: Redis connection failed:", e)
             r = None
         return r
 

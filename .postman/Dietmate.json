@@ -1,0 +1,863 @@
+{
+	"info": {
+	  "_postman_id": "b57e2f48-6c91-4d21-8e36-2df62f913c8c",
+	  "name": "DietMate API",
+	  "description": "Testy API dla aplikacji DietMate (z wyłączeniem Redis)",
+	  "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+	  {
+		"name": "Sesja i autoryzacja",
+		"item": [
+		  {
+			"name": "Utwórz nową sesję",
+			"request": {
+			  "method": "GET",
+			  "header": [],
+			  "url": {
+				"raw": "{{base_url}}/api/session",
+				"host": [
+				  "{{base_url}}"
+				],
+				"path": [
+				  "api",
+				  "session"
+				]
+			  },
+			  "description": "Tworzy nową sesję i generuje token JWT"
+			},
+			"response": []
+		  },
+		  {
+			"name": "Logowanie użytkownika",
+			"event": [
+			  {
+				"listen": "test",
+				"script": {
+				  "exec": [
+					"var jsonData = JSON.parse(responseBody);",
+					"if (jsonData.token) {",
+					"    pm.environment.set(\"user_token\", jsonData.token);",
+					"}"
+				  ],
+				  "type": "text/javascript"
+				}
+			  }
+			],
+			"request": {
+			  "method": "POST",
+			  "header": [
+				{
+				  "key": "Content-Type",
+				  "value": "application/json",
+				  "type": "text"
+				}
+			  ],
+			  "body": {
+				"mode": "raw",
+				"raw": "{\n    \"email\": \"test@example.com\",\n    \"password\": \"haslo123\"\n}"
+			  },
+			  "url": {
+				"raw": "{{base_url}}/api/login",
+				"host": [
+				  "{{base_url}}"
+				],
+				"path": [
+				  "api",
+				  "login"
+				]
+			  },
+			  "description": "Logowanie użytkownika z pobraniem tokena JWT"
+			},
+			"response": []
+		  }
+		],
+		"description": "Endpointy do zarządzania sesją i autoryzacją"
+	  },
+	  {
+		"name": "Integracja z GPT",
+		"item": [
+		  {
+			"name": "Zapytanie do GPT",
+			"request": {
+			  "method": "POST",
+			  "header": [
+				{
+				  "key": "Authorization",
+				  "value": "Bearer {{token}}",
+				  "type": "text"
+				},
+				{
+				  "key": "Content-Type",
+				  "value": "application/json",
+				  "type": "text"
+				}
+			  ],
+			  "body": {
+				"mode": "raw",
+				"raw": "{\n    \"message\": \"Pomóż mi skomponować dietę keto na 7 dni\",\n    \"fileName\": \"\",\n    \"fileContent\": \"\"\n}"
+			  },
+			  "url": {
+				"raw": "{{base_url}}/api/askGPT",
+				"host": [
+				  "{{base_url}}"
+				],
+				"path": [
+				  "api",
+				  "askGPT"
+				]
+			  },
+			  "description": "Wysyła zapytanie do modelu GPT i otrzymuje odpowiedź w strumieniu"
+			},
+			"response": []
+		  },
+		  {
+			"name": "Zapytanie do GPT z plikiem",
+			"request": {
+			  "method": "POST",
+			  "header": [
+				{
+				  "key": "Authorization",
+				  "value": "Bearer {{token}}",
+				  "type": "text"
+				},
+				{
+				  "key": "Content-Type",
+				  "value": "application/json",
+				  "type": "text"
+				}
+			  ],
+			  "body": {
+				"mode": "raw",
+				"raw": "{\n    \"message\": \"Przeanalizuj te dane żywieniowe i zaproponuj ulepszenia diety\",\n    \"fileName\": \"dane_zywieniowe.txt\",\n    \"fileContent\": \"Śniadanie: 2 jajka, chleb pełnoziarnisty, masło\\nObiad: Kurczak, ryż, warzywa\\nKolacja: Jogurt z owocami\"\n}"
+			  },
+			  "url": {
+				"raw": "{{base_url}}/api/askGPT",
+				"host": [
+				  "{{base_url}}"
+				],
+				"path": [
+				  "api",
+				  "askGPT"
+				]
+			  },
+			  "description": "Wysyła zapytanie do modelu GPT wraz z zawartością pliku"
+			},
+			"response": []
+		  }
+		],
+		"description": "Endpointy do komunikacji z modelami GPT"
+	  },
+	  {
+		"name": "Użytkownicy",
+		"item": [
+		  {
+			"name": "Pobierz wszystkich użytkowników",
+			"request": {
+			  "method": "GET",
+			  "header": [],
+			  "url": {
+				"raw": "{{base_url}}/api/users",
+				"host": [
+				  "{{base_url}}"
+				],
+				"path": [
+				  "api",
+				  "users"
+				]
+			  },
+			  "description": "Pobiera listę wszystkich użytkowników z bazy danych"
+			},
+			"response": []
+		  },
+		  {
+			"name": "Utwórz nowego użytkownika",
+			"request": {
+			  "method": "POST",
+			  "header": [
+				{
+				  "key": "Content-Type",
+				  "value": "application/json",
+				  "type": "text"
+				}
+			  ],
+			  "body": {
+				"mode": "raw",
+				"raw": "{\n    \"nickname\": \"testuser\",\n    \"email\": \"test@example.com\",\n    \"password\": \"haslo123\",\n    \"first_name\": \"Jan\",\n    \"last_name\": \"Kowalski\",\n    \"weight\": 75,\n    \"height\": 180,\n    \"age\": 30,\n    \"role\": \"user\"\n}"
+			  },
+			  "url": {
+				"raw": "{{base_url}}/api/users",
+				"host": [
+				  "{{base_url}}"
+				],
+				"path": [
+				  "api",
+				  "users"
+				]
+			  },
+			  "description": "Tworzy nowego użytkownika w systemie"
+			},
+			"response": []
+		  },
+		  {
+			"name": "Pobierz użytkownika według email",
+			"request": {
+			  "method": "GET",
+			  "header": [],
+			  "url": {
+				"raw": "{{base_url}}/api/users/test@example.com",
+				"host": [
+				  "{{base_url}}"
+				],
+				"path": [
+				  "api",
+				  "users",
+				  "test@example.com"
+				]
+			  },
+			  "description": "Pobiera informacje o użytkowniku na podstawie adresu email"
+			},
+			"response": []
+		  },
+		  {
+			"name": "Aktualizuj użytkownika",
+			"request": {
+			  "method": "PUT",
+			  "header": [
+				{
+				  "key": "Content-Type",
+				  "value": "application/json",
+				  "type": "text"
+				}
+			  ],
+			  "body": {
+				"mode": "raw",
+				"raw": "{\n    \"weight\": 73,\n    \"height\": 181\n}"
+			  },
+			  "url": {
+				"raw": "{{base_url}}/api/users/test@example.com",
+				"host": [
+				  "{{base_url}}"
+				],
+				"path": [
+				  "api",
+				  "users",
+				  "test@example.com"
+				]
+			  },
+			  "description": "Aktualizuje dane użytkownika na podstawie adresu email"
+			},
+			"response": []
+		  },
+		  {
+			"name": "Usuń użytkownika",
+			"request": {
+			  "method": "DELETE",
+			  "header": [],
+			  "url": {
+				"raw": "{{base_url}}/api/users/test@example.com",
+				"host": [
+				  "{{base_url}}"
+				],
+				"path": [
+				  "api",
+				  "users",
+				  "test@example.com"
+				]
+			  },
+			  "description": "Usuwa użytkownika z systemu na podstawie adresu email"
+			},
+			"response": []
+		  }
+		],
+		"description": "Endpointy do zarządzania użytkownikami"
+	  },
+	  {
+		"name": "Diety",
+		"item": [
+		  {
+			"name": "Pobierz wszystkie diety",
+			"request": {
+			  "method": "GET",
+			  "header": [],
+			  "url": {
+				"raw": "{{base_url}}/api/diets",
+				"host": [
+				  "{{base_url}}"
+				],
+				"path": [
+				  "api",
+				  "diets"
+				]
+			  },
+			  "description": "Pobiera listę wszystkich dostępnych diet"
+			},
+			"response": []
+		  },
+		  {
+			"name": "Utwórz nową dietę",
+			"request": {
+			  "method": "POST",
+			  "header": [
+				{
+				  "key": "Content-Type",
+				  "value": "application/json",
+				  "type": "text"
+				}
+			  ],
+			  "body": {
+				"mode": "raw",
+				"raw": "{\n    \"diet_name\": \"Dieta ketogeniczna\",\n    \"description\": \"Dieta bogata w tłuszcze i białka, z ograniczoną ilością węglowodanów\",\n    \"rating\": 4.5,\n    \"meals\": [\n        {\n            \"meal_name\": \"Śniadanie\",\n            \"products\": [\n                {\n                    \"name\": \"Jajka\",\n                    \"quantity\": 2,\n                    \"unit\": \"szt\"\n                },\n                {\n                    \"name\": \"Awokado\",\n                    \"quantity\": 0.5,\n                    \"unit\": \"szt\"\n                }\n            ]\n        },\n        {\n            \"meal_name\": \"Obiad\",\n            \"products\": [\n                {\n                    \"name\": \"Łosoś\",\n                    \"quantity\": 150,\n                    \"unit\": \"g\"\n                },\n                {\n                    \"name\": \"Szpinak\",\n                    \"quantity\": 100,\n                    \"unit\": \"g\"\n                }\n            ]\n        }\n    ]\n}"
+			  },
+			  "url": {
+				"raw": "{{base_url}}/api/diets",
+				"host": [
+				  "{{base_url}}"
+				],
+				"path": [
+				  "api",
+				  "diets"
+				]
+			  },
+			  "description": "Tworzy nową dietę w systemie"
+			},
+			"response": []
+		  },
+		  {
+			"name": "Pobierz dietę według ID",
+			"request": {
+			  "method": "GET",
+			  "header": [],
+			  "url": {
+				"raw": "{{base_url}}/api/diets/{{diet_id}}",
+				"host": [
+				  "{{base_url}}"
+				],
+				"path": [
+				  "api",
+				  "diets",
+				  "{{diet_id}}"
+				]
+			  },
+			  "description": "Pobiera szczegóły konkretnej diety na podstawie jej ID"
+			},
+			"response": []
+		  },
+		  {
+			"name": "Aktualizuj dietę",
+			"request": {
+			  "method": "PUT",
+			  "header": [
+				{
+				  "key": "Content-Type",
+				  "value": "application/json",
+				  "type": "text"
+				}
+			  ],
+			  "body": {
+				"mode": "raw",
+				"raw": "{\n    \"rating\": 4.7,\n    \"description\": \"Ulepszona dieta ketogeniczna z większą ilością zdrowych tłuszczów\"\n}"
+			  },
+			  "url": {
+				"raw": "{{base_url}}/api/diets/{{diet_id}}",
+				"host": [
+				  "{{base_url}}"
+				],
+				"path": [
+				  "api",
+				  "diets",
+				  "{{diet_id}}"
+				]
+			  },
+			  "description": "Aktualizuje informacje o diecie"
+			},
+			"response": []
+		  },
+		  {
+			"name": "Usuń dietę",
+			"request": {
+			  "method": "DELETE",
+			  "header": [],
+			  "url": {
+				"raw": "{{base_url}}/api/diets/{{diet_id}}",
+				"host": [
+				  "{{base_url}}"
+				],
+				"path": [
+				  "api",
+				  "diets",
+				  "{{diet_id}}"
+				]
+			  },
+			  "description": "Usuwa dietę z systemu"
+			},
+			"response": []
+		  }
+		],
+		"description": "Endpointy do zarządzania dietami"
+	  },
+	  {
+		"name": "Inne",
+		"item": [
+		  {
+			"name": "Strona główna",
+			"request": {
+			  "method": "GET",
+			  "header": [],
+			  "url": {
+				"raw": "{{base_url}}/",
+				"host": [
+				  "{{base_url}}"
+				],
+				"path": [
+				  ""
+				]
+			  },
+			  "description": "Pobiera podstawową informację o API"
+			},
+			"response": []
+		  },
+		  {
+			"name": "Zakup diety",
+			"request": {
+			  "method": "POST",
+			  "header": [
+				{
+				  "key": "Content-Type",
+				  "value": "application/json",
+				  "type": "text"
+				}
+			  ],
+			  "body": {
+				"mode": "raw",
+				"raw": "{\n    \"dietId\": \"{{diet_id}}\",\n    \"userData\": {\n        \"name\": \"Jan Kowalski\",\n        \"email\": \"jan.kowalski@example.com\"\n    }\n}"
+			  },
+			  "url": {
+				"raw": "{{base_url}}/api/purchase",
+				"host": [
+				  "{{base_url}}"
+				],
+				"path": [
+				  "api",
+				  "purchase"
+				]
+			  },
+			  "description": "Realizuje zakup diety przez użytkownika"
+			},
+			"response": []
+		  }
+		],
+		"description": "Pozostałe endpointy aplikacji"
+	  },
+	  {
+		"name": "Przypadki testowe",
+		"item": [
+		  {
+			"name": "Rejestracja i logowanie użytkownika",
+			"item": [
+			  {
+				"name": "1. Rejestracja nowego użytkownika",
+				"request": {
+				  "method": "POST",
+				  "header": [
+					{
+					  "key": "Content-Type",
+					  "value": "application/json",
+					  "type": "text"
+					}
+				  ],
+				  "body": {
+					"mode": "raw",
+					"raw": "{\n    \"nickname\": \"jan_kowalski\",\n    \"email\": \"jan.kowalski@example.com\",\n    \"password\": \"silneHaslo123\",\n    \"first_name\": \"Jan\",\n    \"last_name\": \"Kowalski\",\n    \"weight\": 80,\n    \"height\": 185,\n    \"age\": 35,\n    \"role\": \"user\"\n}"
+				  },
+				  "url": {
+					"raw": "{{base_url}}/api/users",
+					"host": [
+					  "{{base_url}}"
+					],
+					"path": [
+					  "api",
+					  "users"
+					]
+				  }
+				},
+				"response": []
+			  },
+			  {
+				"name": "2. Logowanie użytkownika",
+				"event": [
+				  {
+					"listen": "test",
+					"script": {
+					  "exec": [
+						"var jsonData = JSON.parse(responseBody);",
+						"if (jsonData.token) {",
+						"    pm.environment.set(\"user_token\", jsonData.token);",
+						"}"
+					  ],
+					  "type": "text/javascript"
+					}
+				  }
+				],
+				"request": {
+				  "method": "POST",
+				  "header": [
+					{
+					  "key": "Content-Type",
+					  "value": "application/json",
+					  "type": "text"
+					}
+				  ],
+				  "body": {
+					"mode": "raw",
+					"raw": "{\n    \"email\": \"jan.kowalski@example.com\",\n    \"password\": \"silneHaslo123\"\n}"
+				  },
+				  "url": {
+					"raw": "{{base_url}}/api/login",
+					"host": [
+					  "{{base_url}}"
+					],
+					"path": [
+					  "api",
+					  "login"
+					]
+				  }
+				},
+				"response": []
+			  },
+			  {
+				"name": "3. Sprawdzenie danych użytkownika",
+				"request": {
+				  "method": "GET",
+				  "header": [],
+				  "url": {
+					"raw": "{{base_url}}/api/users/jan.kowalski@example.com",
+					"host": [
+					  "{{base_url}}"
+					],
+					"path": [
+					  "api",
+					  "users",
+					  "jan.kowalski@example.com"
+					]
+				  }
+				},
+				"response": []
+			  },
+			  {
+				"name": "4. Aktualizacja danych użytkownika",
+				"request": {
+				  "method": "PUT",
+				  "header": [
+					{
+					  "key": "Content-Type",
+					  "value": "application/json",
+					  "type": "text"
+					}
+				  ],
+				  "body": {
+					"mode": "raw",
+					"raw": "{\n    \"weight\": 78,\n    \"height\": 185\n}"
+				  },
+				  "url": {
+					"raw": "{{base_url}}/api/users/jan.kowalski@example.com",
+					"host": [
+					  "{{base_url}}"
+					],
+					"path": [
+					  "api",
+					  "users",
+					  "jan.kowalski@example.com"
+					]
+				  }
+				},
+				"response": []
+			  }
+			],
+			"description": "Pełny proces rejestracji i logowania użytkownika"
+		  },
+		  {
+			"name": "Tworzenie i zakup diety",
+			"item": [
+			  {
+				"name": "1. Utwórz nową dietę",
+				"event": [
+				  {
+					"listen": "test",
+					"script": {
+					  "exec": [
+						"var jsonData = JSON.parse(responseBody);",
+						"if (jsonData.diet_id) {",
+						"    pm.environment.set(\"test_diet_id\", jsonData.diet_id);",
+						"}"
+					  ],
+					  "type": "text/javascript"
+					}
+				  }
+				],
+				"request": {
+				  "method": "POST",
+				  "header": [
+					{
+					  "key": "Content-Type",
+					  "value": "application/json",
+					  "type": "text"
+					}
+				  ],
+				  "body": {
+					"mode": "raw",
+					"raw": "{\n    \"diet_name\": \"Dieta śródziemnomorska\",\n    \"description\": \"Dieta oparta na warzywach, owocach, rybach i oliwie z oliwek\",\n    \"rating\": 4.8,\n    \"meals\": [\n        {\n            \"meal_name\": \"Śniadanie\",\n            \"products\": [\n                {\n                    \"name\": \"Chleb pełnoziarnisty\",\n                    \"quantity\": 2,\n                    \"unit\": \"kromki\"\n                },\n                {\n                    \"name\": \"Oliwa z oliwek\",\n                    \"quantity\": 5,\n                    \"unit\": \"ml\"\n                },\n                {\n                    \"name\": \"Pomidor\",\n                    \"quantity\": 1,\n                    \"unit\": \"szt\"\n                }\n            ]\n        },\n        {\n            \"meal_name\": \"Obiad\",\n            \"products\": [\n                {\n                    \"name\": \"Dorada\",\n                    \"quantity\": 150,\n                    \"unit\": \"g\"\n                },\n                {\n                    \"name\": \"Warzywa grillowane\",\n                    \"quantity\": 200,\n                    \"unit\": \"g\"\n                }\n            ]\n        },\n        {\n            \"meal_name\": \"Kolacja\",\n            \"products\": [\n                {\n                    \"name\": \"Jogurt grecki\",\n                    \"quantity\": 150,\n                    \"unit\": \"g\"\n                },\n                {\n                    \"name\": \"Miód\",\n                    \"quantity\": 10,\n                    \"unit\": \"g\"\n                },\n                {\n                    \"name\": \"Orzechy włoskie\",\n                    \"quantity\": 15,\n                    \"unit\": \"g\"\n                }\n            ]\n        }\n    ]\n}"
+				  },
+				  "url": {
+					"raw": "{{base_url}}/api/diets",
+					"host": [
+					  "{{base_url}}"
+					],
+					"path": [
+					  "api",
+					  "diets"
+					]
+				  }
+				},
+				"response": []
+			  },
+			  {
+				"name": "2. Sprawdź utworzoną dietę",
+				"request": {
+				  "method": "GET",
+				  "header": [],
+				  "url": {
+					"raw": "{{base_url}}/api/diets/{{test_diet_id}}",
+					"host": [
+					  "{{base_url}}"
+					],
+					"path": [
+					  "api",
+					  "diets",
+					  "{{test_diet_id}}"
+					]
+				  }
+				},
+				"response": []
+			  },
+			  {
+				"name": "3. Aktualizuj dietę",
+				"request": {
+				  "method": "PUT",
+				  "header": [
+					{
+					  "key": "Content-Type",
+					  "value": "application/json",
+					  "type": "text"
+					}
+				  ],
+				  "body": {
+					"mode": "raw",
+					"raw": "{\n    \"description\": \"Tradycyjna dieta śródziemnomorska z dodatkiem owoców morza\",\n    \"rating\": 4.9\n}"
+				  },
+				  "url": {
+					"raw": "{{base_url}}/api/diets/{{test_diet_id}}",
+					"host": [
+					  "{{base_url}}"
+					],
+					"path": [
+					  "api",
+					  "diets",
+					  "{{test_diet_id}}"
+					]
+				  }
+				},
+				"response": []
+			  },
+			  {
+				"name": "4. Zakup diety",
+				"request": {
+				  "method": "POST",
+				  "header": [
+					{
+					  "key": "Content-Type",
+					  "value": "application/json",
+					  "type": "text"
+					}
+				  ],
+				  "body": {
+					"mode": "raw",
+					"raw": "{\n    \"dietId\": \"{{test_diet_id}}\",\n    \"userData\": {\n        \"name\": \"Jan Kowalski\",\n        \"email\": \"jan.kowalski@example.com\"\n    }\n}"
+				  },
+				  "url": {
+					"raw": "{{base_url}}/api/purchase",
+					"host": [
+					  "{{base_url}}"
+					],
+					"path": [
+					  "api",
+					  "purchase"
+					]
+				  }
+				},
+				"response": []
+			  }
+			],
+			"description": "Pełny proces tworzenia, aktualizacji i zakupu diety"
+		  },
+		  {
+			"name": "Konsultacja z AI",
+			"item": [
+			  {
+				"name": "1. Utwórz sesję",
+				"event": [
+				  {
+					"listen": "test",
+					"script": {
+					  "exec": [
+						"var jsonData = JSON.parse(responseBody);",
+						"if (jsonData.token) {",
+						"    pm.environment.set(\"ai_token\", jsonData.token);",
+						"}"
+					  ],
+					  "type": "text/javascript"
+					}
+				  }
+				],
+				"request": {
+				  "method": "GET",
+				  "header": [],
+				  "url": {
+					"raw": "{{base_url}}/api/session",
+					"host": [
+					  "{{base_url}}"
+					],
+					"path": [
+					  "api",
+					  "session"
+					]
+				  }
+				},
+				"response": []
+			  },
+			  {
+				"name": "2. Zapytanie do AI o dietę",
+				"request": {
+				  "method": "POST",
+				  "header": [
+					{
+					  "key": "Authorization",
+					  "value": "Bearer {{ai_token}}",
+					  "type": "text"
+					},
+					{
+					  "key": "Content-Type",
+					  "value": "application/json",
+					  "type": "text"
+					}
+				  ],
+				  "body": {
+					"mode": "raw",
+					"raw": "{\n    \"message\": \"Jestem osobą aktywnie ćwiczącą na siłowni 4 razy w tygodniu. Pomóż mi ułożyć dietę na tydzień, która wspiera budowanie masy mięśniowej.\",\n    \"fileName\": \"\",\n    \"fileContent\": \"\"\n}"
+				  },
+				  "url": {
+					"raw": "{{base_url}}/api/askGPT",
+					"host": [
+					  "{{base_url}}"
+					],
+					"path": [
+					  "api",
+					  "askGPT"
+					]
+				  }
+				},
+				"response": []
+			  },
+			  {
+				"name": "3. Zapytanie do AI z danymi obecnej diety",
+				"request": {
+				  "method": "POST",
+				  "header": [
+					{
+					  "key": "Authorization",
+					  "value": "Bearer {{ai_token}}",
+					  "type": "text"
+					},
+					{
+					  "key": "Content-Type",
+					  "value": "application/json",
+					  "type": "text"
+					}
+				  ],
+				  "body": {
+					"mode": "raw",
+					"raw": "{\n    \"message\": \"Czy ta dieta jest zbilansowana i co mógłbym poprawić?\",\n    \"fileName\": \"moja_dieta.txt\",\n    \"fileContent\": \"Śniadanie: 4 jajka, owsianka z mlekiem\\nII Śniadanie: Shake proteinowy, banan\\nObiad: 200g kurczaka, 100g ryżu, brokuły\\nPodwieczorek: Twaróg, orzechy\\nKolacja: Łosoś, bataty\"\n}"
+				  },
+				  "url": {
+					"raw": "{{base_url}}/api/askGPT",
+					"host": [
+					  "{{base_url}}"
+					],
+					"path": [
+					  "api",
+					  "askGPT"
+					]
+				  }
+				},
+				"response": []
+			  }
+			],
+			"description": "Proces konsultacji dietetycznej z modelem AI"
+		  }
+		],
+		"description": "Kompleksowe scenariusze testowe dla głównych funkcji aplikacji"
+	  }
+	],
+	"event": [
+	  {
+		"listen": "prerequest",
+		"script": {
+		  "type": "text/javascript",
+		  "exec": [
+			""
+		  ]
+		}
+	  },
+	  {
+		"listen": "test",
+		"script": {
+		  "type": "text/javascript",
+		  "exec": [
+			""
+		  ]
+		}
+	  }
+	],
+	"variable": [
+	  {
+		"key": "base_url",
+		"value": "http://localhost:5000",
+		"type": "string"
+	  },
+	  {
+		"key": "token",
+		"value": "",
+		"type": "string"
+	  },
+	  {
+		"key": "user_token",
+		"value": "",
+		"type": "string"
+	  },
+	  {
+		"key": "ai_token",
+		"value": "",
+		"type": "string"
+	  },
+	  {
+		"key": "diet_id",
+		"value": "",
+		"type": "string"
+	  },
+	  {
+		"key": "test_diet_id",
+		"value": "",
+		"type": "string"
+	  }
+	]
+  }

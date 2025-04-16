@@ -1,15 +1,19 @@
 {
-    "restoreTerminals.terminals": [
+  "files.exclude": {
+    "**/__pycache__": true,
+    "**/*.pyc": true
+  },
+  "restoreTerminals.terminals": [
     {
       "splitTerminals": [
         {
             "name": "server",
             "commands": [
                 "cd backend",
-                "test -d venv || python3 -m venv venv",
-                "source venv/bin/activate",
+                "[ \"$(uname)\" = \"Darwin\" ] && (test -d venv || python3 -m venv venv) || (test -d venv || py -m venv venv)",
+                "[ \"$(uname)\" = \"Darwin\" ] && source venv/bin/activate || source venv/Scripts/activate",
                 "poetry install",
-                "python3 local.py"
+                "[ \"$(uname)\" = \"Darwin\" ] && python3 local.py || py local.py"
             ]
         },
         {
