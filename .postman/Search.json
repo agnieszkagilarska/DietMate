@@ -1,0 +1,517 @@
+{
+    "info": {
+      "_postman_id": "f5e13c5d-6f1a-4b2e-9a7d-c8476e55f9db",
+      "name": "DietMate - Koszyk zakupowy z wyszukiwaniem",
+      "description": "Implementacja koszyka zakupowego z wykorzystaniem Redis Sets i demonstracja wyszukiwania",
+      "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+      {
+        "name": "1. Utworzenie sesji i koszyka",
+        "item": [
+          {
+            "name": "Utworzenie sesji",
+            "event": [
+              {
+                "listen": "test",
+                "script": {
+                  "exec": [
+                    "var jsonData = JSON.parse(responseBody);",
+                    "pm.environment.set(\"token\", jsonData.token);",
+                    "pm.test(\"Token został wygenerowany\", function() {",
+                    "    pm.expect(jsonData.token).to.be.a('string').and.not.empty;",
+                    "});"
+                  ],
+                  "type": "text/javascript"
+                }
+              }
+            ],
+            "request": {
+              "method": "GET",
+              "header": [],
+              "url": {
+                "raw": "{{base_url}}/api/session",
+                "host": ["{{base_url}}"],
+                "path": ["api", "session"]
+              },
+              "description": "Tworzy nową sesję użytkownika i pobiera token JWT"
+            },
+            "response": []
+          }
+        ],
+        "description": "Przygotowanie sesji użytkownika"
+      },
+      {
+        "name": "2. Operacje na koszyku",
+        "item": [
+          {
+            "name": "Dodaj pojedynczy produkt do koszyka",
+            "request": {
+              "method": "POST",
+              "header": [
+                {
+                  "key": "Authorization",
+                  "value": "Bearer {{token}}",
+                  "type": "text"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json",
+                  "type": "text"
+                }
+              ],
+              "body": {
+                "mode": "raw",
+                "raw": "{\n    \"value\": \"Oliwa z oliwek extra virgin 500ml\",\n    \"count\": 1\n}"
+              },
+              "url": {
+                "raw": "{{base_url}}/api/redis/add?set_name=shopping_cart&collection_type=cart",
+                "host": ["{{base_url}}"],
+                "path": ["api", "redis", "add"],
+                "query": [
+                  {
+                    "key": "set_name",
+                    "value": "shopping_cart"
+                  },
+                  {
+                    "key": "collection_type",
+                    "value": "cart"
+                  }
+                ]
+              },
+              "description": "Dodaje pojedynczy produkt do koszyka"
+            },
+            "response": []
+          },
+          {
+            "name": "Dodaj wiele produktów do koszyka",
+            "request": {
+              "method": "POST",
+              "header": [
+                {
+                  "key": "Authorization",
+                  "value": "Bearer {{token}}",
+                  "type": "text"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json",
+                  "type": "text"
+                }
+              ],
+              "body": {
+                "mode": "raw",
+                "raw": "{\n    \"values\": [\n        \"Jogurt grecki naturalny 400g\",\n        \"Chleb pełnoziarnisty 500g\",\n        \"Sałata lodowa\",\n        \"Pomidory malinowe 500g\",\n        \"Ogórki świeże 500g\",\n        \"Ser feta 200g\",\n        \"Oliwki czarne bez pestek 200g\",\n        \"Makaron pełnoziarnisty 400g\",\n        \"Tuńczyk w sosie własnym 150g\",\n        \"Olej kokosowy extra virgin 250ml\"\n    ],\n    \"count\": 1,\n    \"ttl\": 86400\n}"
+              },
+              "url": {
+                "raw": "{{base_url}}/api/redis/bulk-add?set_name=shopping_cart&collection_type=cart",
+                "host": ["{{base_url}}"],
+                "path": ["api", "redis", "bulk-add"],
+                "query": [
+                  {
+                    "key": "set_name",
+                    "value": "shopping_cart"
+                  },
+                  {
+                    "key": "collection_type",
+                    "value": "cart"
+                  }
+                ]
+              },
+              "description": "Dodaje wiele produktów do koszyka jednocześnie"
+            },
+            "response": []
+          },
+          {
+            "name": "Zwiększ ilość produktu w koszyku",
+            "request": {
+              "method": "POST",
+              "header": [
+                {
+                  "key": "Authorization",
+                  "value": "Bearer {{token}}",
+                  "type": "text"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json",
+                  "type": "text"
+                }
+              ],
+              "body": {
+                "mode": "raw",
+                "raw": "{\n    \"value\": \"Jogurt grecki naturalny 400g\",\n    \"increment\": 2\n}"
+              },
+              "url": {
+                "raw": "{{base_url}}/api/redis/increment?set_name=shopping_cart",
+                "host": ["{{base_url}}"],
+                "path": ["api", "redis", "increment"],
+                "query": [
+                  {
+                    "key": "set_name",
+                    "value": "shopping_cart"
+                  }
+                ]
+              },
+              "description": "Zwiększa ilość produktu w koszyku"
+            },
+            "response": []
+          },
+          {
+            "name": "Zmień nazwę produktu w koszyku",
+            "request": {
+              "method": "PUT",
+              "header": [
+                {
+                  "key": "Authorization",
+                  "value": "Bearer {{token}}",
+                  "type": "text"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json",
+                  "type": "text"
+                }
+              ],
+              "body": {
+                "mode": "raw",
+                "raw": "{\n    \"old_value\": \"Tuńczyk w sosie własnym 150g\",\n    \"new_value\": \"Tuńczyk w oliwie z oliwek 150g\"\n}"
+              },
+              "url": {
+                "raw": "{{base_url}}/api/redis/update?set_name=shopping_cart",
+                "host": ["{{base_url}}"],
+                "path": ["api", "redis", "update"],
+                "query": [
+                  {
+                    "key": "set_name",
+                    "value": "shopping_cart"
+                  }
+                ]
+              },
+              "description": "Zmienia nazwę produktu w koszyku"
+            },
+            "response": []
+          },
+          {
+            "name": "Pobierz zawartość koszyka",
+            "request": {
+              "method": "GET",
+              "header": [
+                {
+                  "key": "Authorization",
+                  "value": "Bearer {{token}}",
+                  "type": "text"
+                }
+              ],
+              "url": {
+                "raw": "{{base_url}}/api/redis/list?set_name=shopping_cart&page=1&page_size=20",
+                "host": ["{{base_url}}"],
+                "path": ["api", "redis", "list"],
+                "query": [
+                  {
+                    "key": "set_name",
+                    "value": "shopping_cart"
+                  },
+                  {
+                    "key": "page",
+                    "value": "1"
+                  },
+                  {
+                    "key": "page_size",
+                    "value": "20"
+                  }
+                ]
+              },
+              "description": "Wyświetla aktualną zawartość koszyka"
+            },
+            "response": []
+          },
+          {
+            "name": "Usuń produkt z koszyka",
+            "request": {
+              "method": "DELETE",
+              "header": [
+                {
+                  "key": "Authorization",
+                  "value": "Bearer {{token}}",
+                  "type": "text"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json",
+                  "type": "text"
+                }
+              ],
+              "body": {
+                "mode": "raw",
+                "raw": "{\n    \"value\": \"Sałata lodowa\"\n}"
+              },
+              "url": {
+                "raw": "{{base_url}}/api/redis/delete?set_name=shopping_cart",
+                "host": ["{{base_url}}"],
+                "path": ["api", "redis", "delete"],
+                "query": [
+                  {
+                    "key": "set_name",
+                    "value": "shopping_cart"
+                  }
+                ]
+              },
+              "description": "Usuwa produkt z koszyka"
+            },
+            "response": []
+          }
+        ],
+        "description": "Podstawowe operacje na koszyku zakupowym"
+      },
+      {
+        "name": "3. Wyszukiwanie w koszyku",
+        "item": [
+          {
+            "name": "Wyszukaj wszystkie produkty w koszyku",
+            "request": {
+              "method": "GET",
+              "header": [
+                {
+                  "key": "Authorization",
+                  "value": "Bearer {{token}}",
+                  "type": "text"
+                }
+              ],
+              "url": {
+                "raw": "{{base_url}}/api/redis/search?collection_type=cart&limit=20&offset=0",
+                "host": ["{{base_url}}"],
+                "path": ["api", "redis", "search"],
+                "query": [
+                  {
+                    "key": "collection_type",
+                    "value": "cart"
+                  },
+                  {
+                    "key": "limit",
+                    "value": "20"
+                  },
+                  {
+                    "key": "offset",
+                    "value": "0"
+                  }
+                ]
+              },
+              "description": "Wyszukuje wszystkie produkty w koszyku"
+            },
+            "response": []
+          },
+          {
+            "name": "Wyszukaj produkty z oliwą",
+            "request": {
+              "method": "GET",
+              "header": [
+                {
+                  "key": "Authorization",
+                  "value": "Bearer {{token}}",
+                  "type": "text"
+                }
+              ],
+              "url": {
+                "raw": "{{base_url}}/api/redis/search?collection_type=cart&pattern=oliw&limit=10&offset=0",
+                "host": ["{{base_url}}"],
+                "path": ["api", "redis", "search"],
+                "query": [
+                  {
+                    "key": "collection_type",
+                    "value": "cart"
+                  },
+                  {
+                    "key": "pattern",
+                    "value": "oliw"
+                  },
+                  {
+                    "key": "limit",
+                    "value": "10"
+                  },
+                  {
+                    "key": "offset",
+                    "value": "0"
+                  }
+                ]
+              },
+              "description": "Wyszukuje produkty zawierające 'oliw' w koszyku (np. oliwa, oliwki)"
+            },
+            "response": []
+          },
+          {
+            "name": "Wyszukaj produkty 200g",
+            "request": {
+              "method": "GET",
+              "header": [
+                {
+                  "key": "Authorization",
+                  "value": "Bearer {{token}}",
+                  "type": "text"
+                }
+              ],
+              "url": {
+                "raw": "{{base_url}}/api/redis/search?collection_type=cart&pattern=200g&limit=10&offset=0",
+                "host": ["{{base_url}}"],
+                "path": ["api", "redis", "search"],
+                "query": [
+                  {
+                    "key": "collection_type",
+                    "value": "cart"
+                  },
+                  {
+                    "key": "pattern",
+                    "value": "200g"
+                  },
+                  {
+                    "key": "limit",
+                    "value": "10"
+                  },
+                  {
+                    "key": "offset",
+                    "value": "0"
+                  }
+                ]
+              },
+              "description": "Wyszukuje produkty o wadze 200g"
+            },
+            "response": []
+          },
+          {
+            "name": "Wyszukaj produkty pełnoziarniste",
+            "request": {
+              "method": "GET",
+              "header": [
+                {
+                  "key": "Authorization",
+                  "value": "Bearer {{token}}",
+                  "type": "text"
+                }
+              ],
+              "url": {
+                "raw": "{{base_url}}/api/redis/search?collection_type=cart&pattern=pełnoziarnis&limit=10&offset=0",
+                "host": ["{{base_url}}"],
+                "path": ["api", "redis", "search"],
+                "query": [
+                  {
+                    "key": "collection_type",
+                    "value": "cart"
+                  },
+                  {
+                    "key": "pattern",
+                    "value": "pełnoziarnis"
+                  },
+                  {
+                    "key": "limit",
+                    "value": "10"
+                  },
+                  {
+                    "key": "offset",
+                    "value": "0"
+                  }
+                ]
+              },
+              "description": "Wyszukuje produkty pełnoziarniste w koszyku"
+            },
+            "response": []
+          }
+        ],
+        "description": "Demonstracja możliwości wyszukiwania w koszyku z wykorzystaniem indeksu Redis Stack"
+      },
+      {
+        "name": "4. Finalizacja koszyka",
+        "item": [
+          {
+            "name": "Opróżnij koszyk (zamówienie złożone)",
+            "request": {
+              "method": "DELETE",
+              "header": [
+                {
+                  "key": "Authorization",
+                  "value": "Bearer {{token}}",
+                  "type": "text"
+                },
+                {
+                  "key": "Content-Type",
+                  "value": "application/json",
+                  "type": "text"
+                }
+              ],
+              "body": {
+                "mode": "raw",
+                "raw": "{\n    \"values\": [\n        \"Oliwa z oliwek extra virgin 500ml\",\n        \"Jogurt grecki naturalny 400g\",\n        \"Chleb pełnoziarnisty 500g\",\n        \"Pomidory malinowe 500g\",\n        \"Ogórki świeże 500g\",\n        \"Ser feta 200g\",\n        \"Oliwki czarne bez pestek 200g\",\n        \"Makaron pełnoziarnisty 400g\",\n        \"Tuńczyk w oliwie z oliwek 150g\",\n        \"Olej kokosowy extra virgin 250ml\"\n    ]\n}"
+              },
+              "url": {
+                "raw": "{{base_url}}/api/redis/bulk-delete?set_name=shopping_cart",
+                "host": ["{{base_url}}"],
+                "path": ["api", "redis", "bulk-delete"],
+                "query": [
+                  {
+                    "key": "set_name",
+                    "value": "shopping_cart"
+                  }
+                ]
+              },
+              "description": "Usuwa wszystkie produkty z koszyka (np. po złożeniu zamówienia)"
+            },
+            "response": []
+          },
+          {
+            "name": "Sprawdź czy koszyk jest pusty",
+            "request": {
+              "method": "GET",
+              "header": [
+                {
+                  "key": "Authorization",
+                  "value": "Bearer {{token}}",
+                  "type": "text"
+                }
+              ],
+              "url": {
+                "raw": "{{base_url}}/api/redis/list?set_name=shopping_cart",
+                "host": ["{{base_url}}"],
+                "path": ["api", "redis", "list"],
+                "query": [
+                  {
+                    "key": "set_name",
+                    "value": "shopping_cart"
+                  }
+                ]
+              },
+              "description": "Sprawdza czy koszyk został opróżniony"
+            },
+            "response": []
+          }
+        ],
+        "description": "Operacje związane z finalizacją koszyka"
+      }
+    ],
+    "event": [
+      {
+        "listen": "prerequest",
+        "script": {
+          "type": "text/javascript",
+          "exec": [""]
+        }
+      },
+      {
+        "listen": "test",
+        "script": {
+          "type": "text/javascript",
+          "exec": [""]
+        }
+      }
+    ],
+    "variable": [
+      {
+        "key": "base_url",
+        "value": "http://localhost:5000",
+        "type": "string"
+      },
+      {
+        "key": "token",
+        "value": "",
+        "type": "string"
+      }
+    ]
+  }
