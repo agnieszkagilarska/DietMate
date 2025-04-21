@@ -216,7 +216,6 @@ def get_values_from_set(session_id: str):
 def add_to_set(session_id: str):
     try:
         set_name = request.args.get("set_name")
-        collection_type = request.args.get("collection_type")
         data = request.json or {}
         value = data.get("value")
         ttl = int(data.get("ttl")) if "ttl" in data else None
@@ -227,7 +226,7 @@ def add_to_set(session_id: str):
         if value is None:
             return jsonify({"error": "Value is required in the request body"}), 400
 
-        cache_service.add_to_set(session_id, set_name, value, count, ttl, collection_type)
+        cache_service.add_to_set(session_id, set_name, value, count, ttl)
         return jsonify({
             "message": f"Value '{value}' added to set '{set_name}'"
         }), 200
@@ -333,7 +332,6 @@ def add_many_to_set(session_id: str):
         
     Query params:
         set_name: Nazwa zbioru do którego dodać wartości (wymagane)
-        collection_type: Opcjonalny typ kolekcji (np. 'liked', 'bucket')
         
     Body:
         JSON z polami:
@@ -346,7 +344,6 @@ def add_many_to_set(session_id: str):
     """
     try:
         set_name = request.args.get("set_name")
-        collection_type = request.args.get("collection_type")
         data = request.json or {}
         values = data.get("values", [])
         count = int(data.get("count", 1))
@@ -357,7 +354,7 @@ def add_many_to_set(session_id: str):
         if not values:
             return jsonify({"error": "values array is required in the request body"}), 400
 
-        cache_service.add_many_to_set(session_id, set_name, values, count, ttl, collection_type)
+        cache_service.add_many_to_set(session_id, set_name, values, count, ttl)
         return jsonify({
             "message": f"{len(values)} values added to set '{set_name}'"
         }), 200
@@ -457,7 +454,6 @@ def search_keys(session_id: str):
         session_id: ID sesji użytkownika (dostarczane przez dekorator)
         
     Query params:
-        collection_type: Opcjonalny filtr według typu kolekcji (np. 'liked', 'bucket')
         pattern: Opcjonalny wzorzec wyszukiwania (prefiks wartości)
         limit: Maksymalna liczba wyników (opcjonalne, domyślnie 100)
         offset: Przesunięcie wyników dla paginacji (opcjonalne, domyślnie 0)
@@ -466,15 +462,15 @@ def search_keys(session_id: str):
         JSON z pasującymi wynikami oraz ich liczbą całkowitą
     """
     try:
-        collection_type = request.args.get("collection_type")
         pattern = request.args.get("pattern")
+        set_name = request.args.get('set_name')
         limit = int(request.args.get("limit", 100))
         offset = int(request.args.get("offset", 0))
         
         results = cache_service.search_keys(
             session_id=session_id, 
-            collection_type=collection_type,
             pattern=pattern,
+            set_name=set_name,
             limit=limit,
             offset=offset
         )
