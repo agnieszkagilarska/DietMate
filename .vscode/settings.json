@@ -1,20 +1,30 @@
 {
-    "restoreTerminals.terminals": [
+  "terminal.integrated.defaultProfile.windows": "Git Bash",
+  "terminal.integrated.profiles.windows": {
+    "Git Bash": {
+      "path": "C:\\Program Files\\Git\\bin\\bash.exe"
+    }
+  },
+  "restoreTerminals.terminals": [
     {
       "splitTerminals": [
         {
-            "name": "server",
-            "commands": [
-                "cd backend",
-                "test -d venv || python3 -m venv venv",
-                "source venv/bin/activate",
-                "poetry install",
-                "python3 local.py"
-            ]
+          "name": "server",
+          "commands": [
+            "cd backend",
+            "test -d venv || python3 -m venv venv",
+            "source venv/Scripts/activate",
+            "poetry install",
+            "py local.py"
+          ]
         },
         {
-            "name": "client",
-            "commands": ["cd frontend", "npm install", "npm start"]
+          "name": "client",
+          "commands": [
+            "cd frontend",
+            "npm install",
+            "npm start"
+          ]
         }
       ]
     }
