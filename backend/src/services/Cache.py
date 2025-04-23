@@ -851,11 +851,17 @@ class CacheService:
         
         return True
 
-    def delete_many_from_set(self, session_id, set_name, values, decrement=1):
+    def delete_many_from_set(self, session_id, set_name, values, count=1):
         """
         Usuwa wiele wartości ze zbioru lub zmniejsza ich liczniki.
         
         Używa natywnych struktur danych Redis z batch operacją.
+        
+        Args:
+            session_id (str): ID sesji
+            set_name (str): Nazwa zbioru
+            values (list): Lista wartości do usunięcia
+            count (int): O ile zmniejszyć licznik każdej wartości (domyślnie 1)
         """
         if not values:
             return True
@@ -889,6 +895,7 @@ class CacheService:
                 continue
                 
             hash_key = f"hash:{session_id}:{set_name}:{value}"
+            search_key = f"search:{session_id}:{set_name}:{value}"
             
             # Pobierz obecny licznik
             current_count = 1
@@ -897,11 +904,11 @@ class CacheService:
                 if b'count' in old_data:
                     current_count = int(old_data[b'count'].decode('utf-8'))
             
-            # Jeśli licznik > decrement, zmniejszamy go
-            if current_count > decrement:
+            # Jeśli licznik > count, zmniejszamy go
+            if current_count > count:
                 # Zaktualizuj metadane
                 pipe.hset(hash_key, mapping={
-                    "count": current_count - decrement,
+                    "count": current_count - count,
                     "last_updated": now_iso
                 })
                 
@@ -914,9 +921,7 @@ class CacheService:
                 pipe.delete(hash_key)
                 
                 # Usuń klucz wyszukiwania z Redis Stack
-                if collection_type:
-                    search_key = f"search:{session_id}:{set_name}:{value}"
-                    pipe.delete(search_key)
+                pipe.delete(search_key)
         
         # Odśwież TTL dla głównego klucza zbioru
         if self.cache_ttl > 0:

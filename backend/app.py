@@ -293,7 +293,9 @@ def delete_from_set(session_id: str):
         set_name: Nazwa zbioru z którego usunąć wartość (wymagane)
         
     Body:
-        JSON z polem "value" zawierającym wartość do usunięcia
+        JSON z polami:
+          - "value": Wartość do usunięcia
+          - "count": Opcjonalna liczba określająca, ile wystąpień usunąć (domyślnie 1)
         
     Returns:
         JSON z potwierdzeniem usunięcia lub błędem, jeśli wartość nie istnieje
@@ -302,15 +304,16 @@ def delete_from_set(session_id: str):
         set_name = request.args.get("set_name")
         data = request.json or {}
         value = data.get("value")
+        count = int(data.get("count", 1))
         if not set_name:
             return jsonify({"error": "set_name query parameter is required"}), 400
         if value is None:
             return jsonify({"error": "Value is required in the request body"}), 400
 
-        deleted = cache_service.delete_from_set(session_id, set_name, value)
+        deleted = cache_service.delete_from_set(session_id, set_name, value, count)
         if deleted:
             return jsonify({
-                "message": f"Value '{value}' deleted from set '{set_name}'"
+                "message": f"Value '{value}' deleted from set '{set_name}' (count: {count})"
             }), 200
         else:
             return jsonify({"error": f"Value '{value}' not found in set '{set_name}'"}), 404
@@ -368,7 +371,7 @@ def delete_many_from_set(session_id: str):
     Usuwa wiele wartości ze zbioru jednocześnie.
     
     Endpoint pozwala na usunięcie wielu wartości ze zbioru za jednym razem.
-    Jest to optymalizacja dla przypadków, gdy trzeba usunąć wiele elementów.
+    Można określić liczbę wystąpień do usunięcia dla każdej wartości.
     
     Args:
         session_id: ID sesji użytkownika (dostarczane przez dekorator)
@@ -377,7 +380,9 @@ def delete_many_from_set(session_id: str):
         set_name: Nazwa zbioru z którego usunąć wartości (wymagane)
         
     Body:
-        JSON z polem "values" zawierającym listę wartości do usunięcia
+        JSON z polami:
+        - "values": Lista wartości do usunięcia (wymagane)
+        - "count": Liczba wystąpień do usunięcia dla każdej wartości (opcjonalne, domyślnie 1)
         
     Returns:
         JSON z potwierdzeniem usunięcia wartości
@@ -386,19 +391,20 @@ def delete_many_from_set(session_id: str):
         set_name = request.args.get("set_name")
         data = request.json or {}
         values = data.get("values", [])
+        count = int(data.get("count", 1))
         
         if not set_name:
             return jsonify({"error": "set_name query parameter is required"}), 400
         if not values:
             return jsonify({"error": "values array is required in the request body"}), 400
 
-        cache_service.delete_many_from_set(session_id, set_name, values)
+        cache_service.delete_many_from_set(session_id, set_name, values, count)
         return jsonify({
-            "message": f"{len(values)} values deleted from set '{set_name}'"
+            "message": f"{len(values)} values deleted from set '{set_name}' (count: {count})"
         }), 200
     except Exception as e:
         return jsonify({"error": f"Failed to delete values from set: {str(e)}"}), 500
-
+    
 @app.route('/api/redis/increment', methods=['POST'])
 @require_valid_token
 def increment_in_set(session_id: str):
