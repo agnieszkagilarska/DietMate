@@ -37,6 +37,14 @@ import React, {
   
     const addToCart = useCallback((item: CartItem) => {
       setCartItems((prev) => {
+        const existingIndex = prev.findIndex((i) => i.id === item.id);
+    
+        if (existingIndex !== -1) {
+          const updatedItems = [...prev];
+          updatedItems[existingIndex].quantity += item.quantity;
+          return updatedItems;
+        }
+    
         return [...prev, item];
       });
     }, []);

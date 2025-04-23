@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next';
 
 const DietsPage: React.FC = () => {
   const { t } = useTranslation();
-  const { addToCart } = useCart();
+  const { cartItems, addToCart } = useCart();
 
   const [diets, setDiets] = useState<Diet[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -67,11 +67,11 @@ const DietsPage: React.FC = () => {
       name: diet.diet_name,
       description: diet.description,
       price: diet.price,
-      quantity: 1,
+      quantity: 1, // <--- tylko +1, logika sumowania jest w CartContext
       image: diet.imageUrl || '/api/placeholder/400/300',
       duration: 'weekly',
     });
-
+  
     setAddToCartMessage(`"${diet.diet_name}" has been added to your cart.`);
     setTimeout(() => {
       setAddToCartMessage(null);
