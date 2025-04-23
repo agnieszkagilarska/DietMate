@@ -99,6 +99,19 @@ def ask_gpt_endpoint(session_id: str) -> Response:
 @app.route('/api/cache/<key>', methods=['GET'])
 @require_valid_token
 def get_value(session_id, key):
+    """
+    Pobiera wartość dla określonego klucza z pamięci podręcznej.
+    
+    Endpoint służy do odczytu zapisanych wcześniej wartości dla konkretnego 
+    użytkownika (identyfikowanego przez token sesji) i konkretnego klucza.
+    
+    Args:
+        session_id: ID sesji użytkownika (dostarczane przez dekorator)
+        key: Klucz do pobrania z pamięci podręcznej
+        
+    Returns:
+        JSON z wartością klucza lub komunikatem o braku danych
+    """
     try:
         value = cache_service.get_value(session_id, key)
         if value is None:
@@ -110,6 +123,22 @@ def get_value(session_id, key):
 @app.route('/api/cache/<key>', methods=['POST'])
 @require_valid_token
 def set_value(session_id, key):
+    """
+    Zapisuje wartość dla określonego klucza w pamięci podręcznej.
+    
+    Endpoint służy do zapisywania wartości dla konkretnego użytkownika
+    (identyfikowanego przez token sesji) pod wskazanym kluczem.
+    
+    Args:
+        session_id: ID sesji użytkownika (dostarczane przez dekorator)
+        key: Klucz pod którym zostanie zapisana wartość
+        
+    Body:
+        JSON z polem "value" zawierającym wartość do zapisania
+        
+    Returns:
+        JSON z potwierdzeniem zapisania wartości
+    """
     try:
         data = request.json or {}
         value = data.get("value")
@@ -124,9 +153,22 @@ def set_value(session_id, key):
 @require_valid_token
 def get_values_from_set(session_id: str):
     """
-    Pobiera wartości ze zbioru przy użyciu paginacji:
-      - page: numer strony (domyślnie 1)
-      - page_size: liczba elementów na stronę (domyślnie 20)
+    Pobiera wartości z zbioru o określonej nazwie.
+    
+    Endpoint umożliwia paginowane pobieranie wszystkich wartości zapisanych
+    w zbiorze o określonej nazwie dla bieżącego użytkownika. Wyniki są dzielone
+    na strony dla wygodnego przeglądania.
+    
+    Args:
+        session_id: ID sesji użytkownika (dostarczane przez dekorator)
+        
+    Query params:
+        set_name: Nazwa zbioru do pobrania (wymagane)
+        page: Numer strony (opcjonalne, domyślnie 1)
+        page_size: Ilość elementów na stronie (opcjonalne, domyślnie 20)
+        
+    Returns:
+        JSON zawierający paginowane wartości z określonego zbioru
     """
     try:
         set_name = request.args.get("set_name")
@@ -140,15 +182,30 @@ def get_values_from_set(session_id: str):
             return jsonify({"error": "page and page_size must be integers"}), 400
 
         all_values = cache_service.get_set(session_id, set_name)
+        
+        # Konwersja słownika na listę elementów dla paginacji
+        items_list = []
+        for key, value in all_values.items():
+            item_data = value.copy() if isinstance(value, dict) else {"value": value}
+            item_data["key"] = key
+            items_list.append(item_data)
+        
+        # Sortowanie po dacie ostatniej aktualizacji (jeśli dostępna)
+        items_list.sort(
+            key=lambda x: x.get("last_updated", ""),
+            reverse=True
+        )
+        
+        # Paginacja na liście
         start = (page - 1) * page_size
         end = start + page_size
-        batch = all_values[start:end]
+        batch = items_list[start:min(end, len(items_list))]
 
         return jsonify({
             "set_name": set_name,
             "page": page,
             "page_size": page_size,
-            "total": len(all_values),
+            "total": len(items_list),
             "values": batch
         }), 200
     except Exception as e:
@@ -161,12 +218,15 @@ def add_to_set(session_id: str):
         set_name = request.args.get("set_name")
         data = request.json or {}
         value = data.get("value")
+        ttl = int(data.get("ttl")) if "ttl" in data else None
+        count = int(data.get("count", 1))
+        
         if not set_name:
             return jsonify({"error": "set_name query parameter is required"}), 400
         if value is None:
             return jsonify({"error": "Value is required in the request body"}), 400
 
-        cache_service.add_to_set(session_id, set_name, value)
+        cache_service.add_to_set(session_id, set_name, value, count, ttl)
         return jsonify({
             "message": f"Value '{value}' added to set '{set_name}'"
         }), 200
@@ -176,6 +236,27 @@ def add_to_set(session_id: str):
 @app.route('/api/redis/update', methods=['PUT'])
 @require_valid_token
 def update_in_set(session_id: str):
+    """
+    Aktualizuje wartość w zbiorze.
+    
+    Endpoint służy do zmiany istniejącej wartości w zbiorze na nową,
+    z zachowaniem licznika wystąpień. Jeśli stara wartość nie istnieje
+    w zbiorze, operacja się nie powiedzie.
+    
+    Args:
+        session_id: ID sesji użytkownika (dostarczane przez dekorator)
+        
+    Query params:
+        set_name: Nazwa zbioru do aktualizacji (wymagane)
+        
+    Body:
+        JSON z polami:
+        - "old_value": Stara wartość do zastąpienia
+        - "new_value": Nowa wartość
+        
+    Returns:
+        JSON z potwierdzeniem aktualizacji lub błędem, jeśli stara wartość nie istnieje
+    """
     try:
         set_name = request.args.get("set_name")
         data = request.json or {}
@@ -199,24 +280,210 @@ def update_in_set(session_id: str):
 @app.route('/api/redis/delete', methods=['DELETE'])
 @require_valid_token
 def delete_from_set(session_id: str):
+    """
+    Usuwa wartość ze zbioru.
+    
+    Endpoint służy do usuwania konkretnej wartości z określonego zbioru
+    dla bieżącego użytkownika. Jeśli wartość nie istnieje, operacja zwróci błąd.
+    
+    Args:
+        session_id: ID sesji użytkownika (dostarczane przez dekorator)
+        
+    Query params:
+        set_name: Nazwa zbioru z którego usunąć wartość (wymagane)
+        
+    Body:
+        JSON z polami:
+          - "value": Wartość do usunięcia
+          - "count": Opcjonalna liczba określająca, ile wystąpień usunąć (domyślnie 1)
+        
+    Returns:
+        JSON z potwierdzeniem usunięcia lub błędem, jeśli wartość nie istnieje
+    """
     try:
         set_name = request.args.get("set_name")
         data = request.json or {}
         value = data.get("value")
+        count = int(data.get("count", 1))
         if not set_name:
             return jsonify({"error": "set_name query parameter is required"}), 400
         if value is None:
             return jsonify({"error": "Value is required in the request body"}), 400
 
-        deleted = cache_service.delete_from_set(session_id, set_name, value)
+        deleted = cache_service.delete_from_set(session_id, set_name, value, count)
         if deleted:
             return jsonify({
-                "message": f"Value '{value}' deleted from set '{set_name}'"
+                "message": f"Value '{value}' deleted from set '{set_name}' (count: {count})"
             }), 200
         else:
             return jsonify({"error": f"Value '{value}' not found in set '{set_name}'"}), 404
     except Exception as e:
         return jsonify({"error": f"Failed to delete value from set: {str(e)}"}), 500
+    
+@app.route('/api/redis/bulk-add', methods=['POST'])
+@require_valid_token
+def add_many_to_set(session_id: str):
+    """
+    Dodaje wiele wartości do zbioru jednocześnie.
+    
+    Endpoint pozwala na dodanie wielu wartości do zbioru za jednym razem,
+    z opcjonalnym ustawieniem liczników wystąpień, typem kolekcji oraz
+    czasem wygaśnięcia (TTL).
+    
+    Args:
+        session_id: ID sesji użytkownika (dostarczane przez dekorator)
+        
+    Query params:
+        set_name: Nazwa zbioru do którego dodać wartości (wymagane)
+        
+    Body:
+        JSON z polami:
+        - "values": Lista wartości do dodania (wymagane)
+        - "count": Liczba wystąpień dla każdej wartości (opcjonalne, domyślnie 1)
+        - "ttl": Czas życia wartości w sekundach (opcjonalne)
+        
+    Returns:
+        JSON z potwierdzeniem dodania wartości
+    """
+    try:
+        set_name = request.args.get("set_name")
+        data = request.json or {}
+        values = data.get("values", [])
+        count = int(data.get("count", 1))
+        ttl = int(data.get("ttl")) if "ttl" in data else None
+        
+        if not set_name:
+            return jsonify({"error": "set_name query parameter is required"}), 400
+        if not values:
+            return jsonify({"error": "values array is required in the request body"}), 400
+
+        cache_service.add_many_to_set(session_id, set_name, values, count, ttl)
+        return jsonify({
+            "message": f"{len(values)} values added to set '{set_name}'"
+        }), 200
+    except Exception as e:
+        return jsonify({"error": f"Failed to add values to set: {str(e)}"}), 500
+
+@app.route('/api/redis/bulk-delete', methods=['DELETE'])
+@require_valid_token
+def delete_many_from_set(session_id: str):
+    """
+    Usuwa wiele wartości ze zbioru jednocześnie.
+    
+    Endpoint pozwala na usunięcie wielu wartości ze zbioru za jednym razem.
+    Można określić liczbę wystąpień do usunięcia dla każdej wartości.
+    
+    Args:
+        session_id: ID sesji użytkownika (dostarczane przez dekorator)
+        
+    Query params:
+        set_name: Nazwa zbioru z którego usunąć wartości (wymagane)
+        
+    Body:
+        JSON z polami:
+        - "values": Lista wartości do usunięcia (wymagane)
+        - "count": Liczba wystąpień do usunięcia dla każdej wartości (opcjonalne, domyślnie 1)
+        
+    Returns:
+        JSON z potwierdzeniem usunięcia wartości
+    """
+    try:
+        set_name = request.args.get("set_name")
+        data = request.json or {}
+        values = data.get("values", [])
+        count = int(data.get("count", 1))
+        
+        if not set_name:
+            return jsonify({"error": "set_name query parameter is required"}), 400
+        if not values:
+            return jsonify({"error": "values array is required in the request body"}), 400
+
+        cache_service.delete_many_from_set(session_id, set_name, values, count)
+        return jsonify({
+            "message": f"{len(values)} values deleted from set '{set_name}' (count: {count})"
+        }), 200
+    except Exception as e:
+        return jsonify({"error": f"Failed to delete values from set: {str(e)}"}), 500
+    
+@app.route('/api/redis/increment', methods=['POST'])
+@require_valid_token
+def increment_in_set(session_id: str):
+    """
+    Zwiększa licznik wystąpień dla wartości w zbiorze.
+    
+    Endpoint służy do zwiększenia licznika wystąpień dla określonej wartości
+    w zbiorze. Jeśli wartość nie istnieje, zostanie ona dodana z podanym licznikiem.
+    
+    Args:
+        session_id: ID sesji użytkownika (dostarczane przez dekorator)
+        
+    Query params:
+        set_name: Nazwa zbioru w którym zwiększyć licznik (wymagane)
+        
+    Body:
+        JSON z polami:
+        - "value": Wartość dla której zwiększyć licznik
+        - "increment": O ile zwiększyć licznik (opcjonalne, domyślnie 1)
+        
+    Returns:
+        JSON z potwierdzeniem zwiększenia licznika
+    """
+    try:
+        set_name = request.args.get("set_name")
+        data = request.json or {}
+        value = data.get("value")
+        increment = int(data.get("increment", 1))
+        
+        if not set_name:
+            return jsonify({"error": "set_name query parameter is required"}), 400
+        if value is None:
+            return jsonify({"error": "value is required in the request body"}), 400
+
+        cache_service.increment_in_set(session_id, set_name, value, increment)
+        return jsonify({
+            "message": f"Counter for '{value}' in set '{set_name}' incremented by {increment}"
+        }), 200
+    except Exception as e:
+        return jsonify({"error": f"Failed to increment counter: {str(e)}"}), 500
+
+@app.route('/api/redis/search', methods=['GET'])
+@require_valid_token
+def search_keys(session_id: str):
+    """
+    Wyszukuje klucze w pamięci podręcznej według podanych kryteriów.
+    
+    Endpoint umożliwia zaawansowane wyszukiwanie kluczy w pamięci podręcznej
+    na podstawie typu kolekcji oraz wzorca. Wyniki są zwracane w paginowanej formie.
+    Wykorzystuje indeksy Redis Stack dla szybkiego wyszukiwania pełnotekstowego.
+    
+    Args:
+        session_id: ID sesji użytkownika (dostarczane przez dekorator)
+        
+    Query params:
+        pattern: Opcjonalny wzorzec wyszukiwania (prefiks wartości)
+        limit: Maksymalna liczba wyników (opcjonalne, domyślnie 100)
+        offset: Przesunięcie wyników dla paginacji (opcjonalne, domyślnie 0)
+        
+    Returns:
+        JSON z pasującymi wynikami oraz ich liczbą całkowitą
+    """
+    try:
+        pattern = request.args.get("pattern")
+        set_name = request.args.get('set_name')
+        limit = int(request.args.get("limit", 100))
+        offset = int(request.args.get("offset", 0))
+        
+        results = cache_service.search_keys(
+            session_id=session_id, 
+            pattern=pattern,
+            set_name=set_name,
+            limit=limit,
+            offset=offset
+        )
+        
+        return jsonify(results), 200
+    except Exception as e:
+        return jsonify({"error": f"Failed to search keys: {str(e)}"}), 500
 
 
 ########################################### OTHER ENDPOINTS ###########################################
@@ -254,7 +521,6 @@ def create_user():
         if users_collection.find_one({"nickname": data["nickname"]}):
             return jsonify({"error": "Nickname already exists"}), 409
 
-        # Hash hasła jako string
         hashed_password = bcrypt.hashpw(
             data["password"].encode("utf-8"),
             bcrypt.gensalt()

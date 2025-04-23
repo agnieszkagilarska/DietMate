@@ -2,7 +2,7 @@
 name = "backend"
 version = "0.1.0"
 description = "DietMate – Your Smart Diet Companion. Plan meals, track calories, and balance nutrients effortlessly. Achieve your health goals with AI-powered recommendations. Eat smart, live better! 🍏"
-authors = ["Przemyslaw Janiszewski", "Agnieszka Gilarska", "Krzysztof Trzcianowski"]
+authors = ["Przemyslaw Janiszewski", "Agnieszka Gilarska"]
 license = "MIT"
 package-mode = false
 
