@@ -16,6 +16,7 @@ import { CartProvider } from './context/CartContext';
 import GPT from './components/GPT/GPT';
 import './i18n';
 import './tailwind.css';
+import CartPrefetcher from '../src/components/CartPrefetcher';
 
 const App = () => {
     const [anchorElLanguage, setAnchorElLanguage] = useState<null | HTMLElement>(null);
@@ -26,34 +27,38 @@ const App = () => {
     // Using localStorage would be incorrect as different browser tabs would share the same data because the token is issued per browser, not per session
     const [sessionToken, setSessionToken] = useState<string | null>(null);
 
-      useEffect(() => {
-        const initializeSession = async () => {
-          try {
-             // @ts-ignore
-             const domain = window.REACT_APP_DOMAIN;
-             const response = await fetch(`${domain}:5000/api/session`, {
-              method: 'GET',
-              credentials: 'include',
-              headers: {
-                'Content-Type': 'application/json',
-              }
-            });
-      
-            if (!response.ok) {
-              throw new Error('Failed to initialize session');
-            }
-      
-            const data = await response.json();
-            setSessionToken(data.token);
-            console.log('Session initialized successfully');
-          } catch (err) {
-            console.error('Session initialization error:', err);
+    useEffect(() => {
+      const initializeSession = async () => {
+        try {
+          // @ts-ignore
+          const domain = window.REACT_APP_DOMAIN;
+          const response = await fetch(`${domain}:5000/api/session`, {
+            method: 'GET',
+            credentials: 'include',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          });
+    
+          if (!response.ok) {
+            throw new Error('Failed to initialize session');
           }
-        };
-      
-        initializeSession();
-
-      }, []);
+    
+          const data = await response.json();
+          localStorage.setItem('token', data.token); // <<< Zapis tokena do localStorage!
+          console.log('Session initialized successfully, token saved to localStorage');
+        } catch (err) {
+          console.error('Session initialization error:', err);
+        }
+      };
+    
+      const tokenExists = localStorage.getItem('token');
+      if (!tokenExists) {
+        initializeSession(); // tylko jeśli nie ma tokena
+      } else {
+        console.log('Token already exists in localStorage.');
+      }
+    }, []);
 
       const theme = createTheme({
         palette: {
@@ -87,7 +92,13 @@ const App = () => {
 
     return (
         <ThemeProvider theme={theme}>
-          <CartProvider>
+            <CartProvider>
+            <CartPrefetcher /> {/* <<< Tutaj dodajesz Prefetcher */}
+            <CssBaseline />
+            <AppBar
+              position="static"
+              sx={{ backgroundColor: theme.palette.primary.main }}
+            />
             <CssBaseline />
             <AppBar
               position="static"

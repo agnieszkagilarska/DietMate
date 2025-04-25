@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useEffect } from 'react';
 import {
   ShoppingCart,
   Trash2,
@@ -10,13 +11,19 @@ import {
   Info,
 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import { incrementCartItem, deleteCartItem, getDietCountInCart } from '../api/cart';
 
 const CartPage: React.FC = () => {
-  const {
-    cartItems,
-    removeFromCart,
-    updateCartItemQuantity,
+  const { 
+    cartItems, 
+    loadCartFromRedis, 
+    removeFromCart, 
+    updateCartItemQuantity 
   } = useCart();
+
+  useEffect(() => {
+    loadCartFromRedis();
+  }, [loadCartFromRedis]);
 
   const [couponCode, setCouponCode] = useState('');
   const [couponApplied, setCouponApplied] = useState(false);
@@ -33,13 +40,33 @@ const CartPage: React.FC = () => {
   const discount = couponApplied ? discountAmount : 0;
   const total = subtotal - discount + shippingFee;
 
-  const handleQuantityChange = (id: string, newQuantity: number) => {
+  const handleQuantityChange = async (id: string, newQuantity: number, name: string) => {
     if (newQuantity < 1) return;
     updateCartItemQuantity(id, newQuantity);
+    
+    try {
+      const increment = newQuantity - cartItems.find(item => item.id === id)?.quantity!;
+      if (increment !== 0) {
+        await incrementCartItem(name, increment); // <<< aktualizacja w Redis
+      }
+    } catch (error) {
+      console.error('Error updating quantity in Redis:', error);
+    }
   };
 
-  const handleRemove = (id: string) => {
-    removeFromCart(id);
+  const handleRemove = async (id: string, name: string) => {
+    removeFromCart(id); // usuwa lokalnie
+  
+    try {
+      const countInRedis = await getDietCountInCart(name); // <<< pobranie ile jest w bazie
+      if (countInRedis > 0) {
+        await deleteCartItem(name, countInRedis); // <<< wysłanie prawidłowego count
+      } else {
+        console.warn('No such item found in Redis.');
+      }
+    } catch (error) {
+      console.error('Error deleting item from Redis:', error);
+    }
   };
 
   const applyCoupon = async () => {
@@ -146,9 +173,9 @@ const CartPage: React.FC = () => {
 
                           <div className="flex items-center">
                             <div className="flex items-center mr-4 border border-gray-200 rounded-lg">
-                              <button
+                            <button
                                 onClick={() =>
-                                  handleQuantityChange(item.id, item.quantity - 1)
+                                  handleQuantityChange(item.id, item.quantity - 1, item.name)
                                 }
                                 className="p-2 text-secondary-500 hover:text-secondary-700 hover:bg-gray-50 rounded-l-lg transition-colors"
                                 aria-label="Decrease quantity"
@@ -160,7 +187,7 @@ const CartPage: React.FC = () => {
                               </span>
                               <button
                                 onClick={() =>
-                                  handleQuantityChange(item.id, item.quantity + 1)
+                                  handleQuantityChange(item.id, item.quantity + 1, item.name)
                                 }
                                 className="p-2 text-secondary-500 hover:text-secondary-700 hover:bg-gray-50 rounded-r-lg transition-colors"
                                 aria-label="Increase quantity"
@@ -170,7 +197,7 @@ const CartPage: React.FC = () => {
                             </div>
 
                             <button
-                              onClick={() => handleRemove(item.id)}
+                              onClick={() => handleRemove(item.id, item.name)} // <<< Tylko ID i NAME, bez ilości!
                               className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
                               aria-label="Remove item"
                             >
