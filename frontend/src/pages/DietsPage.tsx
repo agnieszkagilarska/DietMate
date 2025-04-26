@@ -4,10 +4,17 @@ import { Filter, Star, ShoppingCart, Heart, Search, ChevronDown } from 'lucide-r
 import { fetchAllDiets, Diet } from '../api/diets';
 import { useCart } from '../context/CartContext';
 import { useTranslation } from 'react-i18next';
+import { addToCartApi } from '../api/cart';
+import { 
+  getFavoritesFromRedis, 
+  addFavoriteToRedis, 
+  removeFavoriteFromRedis 
+} from '../api/favorites';
+
 
 const DietsPage: React.FC = () => {
   const { t } = useTranslation();
-  const { addToCart } = useCart();
+  const { cartItems, addToCart } = useCart();
 
   const [diets, setDiets] = useState<Diet[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -17,8 +24,25 @@ const DietsPage: React.FC = () => {
   const [sortBy, setSortBy] = useState('popular');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [favoriteDiets, setFavoriteDiets] = useState<string[]>([]);
+  const [showFavoritesOnly, setShowFavoritesOnly] = useState(false);
+  const [favoritesLoading, setFavoritesLoading] = useState(true);
 
   const [addToCartMessage, setAddToCartMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadFavorites = async () => {
+      try {
+        const favoritesFromRedis = await getFavoritesFromRedis();
+        setFavoriteDiets(favoritesFromRedis);
+      } catch (error) {
+        console.error('Failed to load favorites:', error);
+      } finally {
+        setFavoritesLoading(false); // <<< Po załadowaniu
+      }
+    };
+    loadFavorites();
+  }, []);
 
   useEffect(() => {
     fetchAllDiets()
@@ -32,19 +56,40 @@ const DietsPage: React.FC = () => {
       });
   }, []);
 
+  const toggleFavorite = async (_dietId: string, dietName: string) => {
+    const isFavorite = favoriteDiets.includes(dietName); // ✅ dietName, nie _id!
+  
+    setFavoriteDiets((prevFavorites) =>
+      isFavorite ? prevFavorites.filter((name) => name !== dietName) : [...prevFavorites, dietName]
+    );
+  
+    try {
+      if (isFavorite) {
+        await removeFavoriteFromRedis(dietName);
+      } else {
+        await addFavoriteToRedis(dietName);
+      }
+    } catch (error) {
+      console.error('Failed to sync favorite with Redis:', error);
+    }
+  };
+
   const filteredDiets = diets.filter((diet) => {
     const matchesSearch =
       diet.diet_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       diet.description.toLowerCase().includes(searchTerm.toLowerCase());
-
+  
     const matchesCategory = !categoryFilter || diet.category === categoryFilter;
     const matchesCalories =
       !caloriesFilter ||
       (caloriesFilter === 'low' && diet.calories < 1500) ||
       (caloriesFilter === 'medium' && diet.calories >= 1500 && diet.calories <= 2000) ||
       (caloriesFilter === 'high' && diet.calories > 2000);
-
-    return matchesSearch && matchesCategory && matchesCalories;
+  
+    const matchesFavorites =
+      !showFavoritesOnly || favoriteDiets.includes(diet.diet_name);
+  
+    return matchesSearch && matchesCategory && matchesCalories && matchesFavorites;
   });
 
   const sortedDiets = [...filteredDiets].sort((a, b) => {
@@ -61,7 +106,7 @@ const DietsPage: React.FC = () => {
     { value: 'high', label: 'High Calories' },
   ];
 
-  const handleAddToCart = (diet: Diet) => {
+  const handleAddToCart = async (diet: Diet) => {
     addToCart({
       id: diet._id ?? '',
       name: diet.diet_name,
@@ -71,12 +116,20 @@ const DietsPage: React.FC = () => {
       image: diet.imageUrl || '/api/placeholder/400/300',
       duration: 'weekly',
     });
-
-    setAddToCartMessage(`"${diet.diet_name}" has been added to your cart.`);
+  
+    try {
+      await addToCartApi(diet.diet_name); // 🚀 Wywołanie zapytania z tokenem z localStorage
+      setAddToCartMessage(`"${diet.diet_name}" has been added to your cart.`);
+    } catch (error) {
+      console.error('Failed to sync cart with Redis:', error);
+      setAddToCartMessage(`"${diet.diet_name}" added locally, but failed to sync with server.`);
+    }
+  
     setTimeout(() => {
       setAddToCartMessage(null);
     }, 3000);
   };
+  
 
   return (
     <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
@@ -199,6 +252,21 @@ const DietsPage: React.FC = () => {
                   ))}
                 </div>
               </div>
+              <div>
+              <label className="block text-sm font-medium text-secondary-700 mb-2">
+                Favorites
+              </label>
+              <button
+                onClick={() => setShowFavoritesOnly((prev) => !prev)}
+                className={`px-3 py-1 text-sm rounded-full border ${
+                  showFavoritesOnly
+                    ? 'bg-primary-100 border-primary-300 text-primary-800'
+                    : 'bg-white border-gray-300 text-secondary-700 hover:bg-gray-50'
+                }`}
+              >
+                {showFavoritesOnly ? 'Show All' : 'Show Only Favorites'}
+              </button>
+            </div>
             </div>
           </div>
         )}
@@ -223,9 +291,23 @@ const DietsPage: React.FC = () => {
                     className="w-full h-full object-cover"
                   />
                   <div className="absolute top-3 right-3">
-                    <button className="p-2 bg-white rounded-full text-secondary-400 hover:text-accent-500 shadow-sm">
-                      <Heart className="h-5 w-5" />
-                    </button>
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      toggleFavorite(diet._id ?? '', diet.diet_name); // Zostawiasz _id do lokalnego toggle, diet_name dla Redis
+                    }}
+                    disabled={favoritesLoading}
+                    className={`p-2 bg-white rounded-full shadow-sm ${
+                      favoriteDiets.includes(diet.diet_name)  // <<< TU JEST ZMIANA!
+                        ? 'text-red-500'
+                        : 'text-secondary-400 hover:text-accent-500'
+                    }`}
+                  >
+                    <Heart
+                      className="h-5 w-5"
+                      fill={favoriteDiets.includes(diet.diet_name) ? 'currentColor' : 'none'}  // <<< TU TEŻ ZMIANA!
+                    />
+                  </button>
                   </div>
                   <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent p-4">
                     <span className="text-white text-sm font-medium px-2 py-1 rounded bg-primary-600">
