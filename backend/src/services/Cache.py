@@ -272,7 +272,7 @@ class CacheService:
     
     def search_keys(self, session_id=None, pattern=None, set_name=None, limit=100, offset=0):
         """
-        Wyszukuje klucze na podstawie kryteriów.
+        Wyszukuje klucze w pamięci podręcznej według podanych kryteriów.
         """
         query_parts = []
         
@@ -283,20 +283,20 @@ class CacheService:
             query_parts.append(f"@set_name:{set_name}")
             
         if pattern:
-            query_parts.append(f"@value:{pattern}*")
+            query_parts.append(f"@value:(?i){pattern}*")
             
         query = " ".join(query_parts) if query_parts else "*"
         
         self.logger.info(f"Searching Redis with query: '{query}'")
         
         try:
-            # Używamy Redis Stack FT.SEARCH
-            results = self.redis_client.ft().search(
-                query, 
-                limit=limit,
-                offset=offset
-            )
-            
+            try:
+                results = self.redis_client.ft().search(query)[:limit]
+            except Exception as inner_e:
+                self.logger.error(f"Próba alternatywnego wywołania Redis Stack: {inner_e}")
+                # Alternatywna składnia dla niektórych wersji Redis
+                results = self.redis_client.ft().search(query, 0, limit)
+                
             items = []
             for doc in results.docs:
                 item = {
@@ -315,16 +315,28 @@ class CacheService:
             self.logger.error(f"Błąd wyszukiwania w Redis Stack: {e}")
             
             # Fallback do prostego wyszukiwania w Redis za pomocą scan
-            search_pattern = f"search:{session_id or '*'}:{set_name or '*'}:{pattern or '*'}"
-            keys = list(self.redis_client.scan_iter(match=search_pattern, count=limit+offset))
+            search_pattern = f"search:{session_id or '*'}:{set_name or '*'}:*"
+            keys = list(self.redis_client.scan_iter(match=search_pattern, count=1000))
             
-            # Wyniki po zastosowaniu offsetu i limitu
-            result_keys = keys[offset:offset+limit] if len(keys) > offset else []
+            # Filtrowanie ręczne z ignorowaniem wielkości liter
+            filtered_keys = []
+            if pattern:
+                pattern_lower = pattern.lower()
+                for key in keys:
+                    key_str = key.decode('utf-8')
+                    parts = key_str.split(':', 3)
+                    if len(parts) == 4 and parts[3].lower().startswith(pattern_lower):
+                        filtered_keys.append(key)
+            else:
+                filtered_keys = keys
+                
+            # Zastosowanie paginacji
+            total = len(filtered_keys)
+            paginated_keys = filtered_keys[offset:offset+limit] if total > offset else []
             
             items = []
-            for key in result_keys:
+            for key in paginated_keys:
                 key_str = key.decode('utf-8')
-                # Format klucza: search:session_id:set_name:value
                 parts = key_str.split(':', 3)
                 if len(parts) == 4:
                     items.append({
@@ -334,7 +346,7 @@ class CacheService:
                     })
             
             return {
-                "total": len(keys),
+                "total": total,
                 "items": items
             }
         
