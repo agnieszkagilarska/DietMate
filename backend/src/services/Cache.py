@@ -166,6 +166,10 @@ class CacheService:
         items = {}
         elements = self.redis_client.smembers(set_key)
         
+        # Jeśli zbiór jest pusty, nie ma co zapisywać
+        if not elements:
+            return
+        
         for value_bytes in elements:
             value = value_bytes.decode('utf-8')
             hash_key = f"{hash_prefix}{value}"
@@ -203,12 +207,15 @@ class CacheService:
             }
         }
         
-        # Dodaj expires_at tylko jeśli cache_ttl > 0
-        if self.cache_ttl > 0:
-            ttl = self.redis_client.ttl(set_key)
-            if ttl > 0:
-                expires_at = now + datetime.timedelta(seconds=ttl)
-                update_data["$set"]["expires_at"] = expires_at
+        # Pobierz TTL z Redis i ustaw expires_at w MongoDB
+        ttl = self.redis_client.ttl(set_key)
+        if ttl > 0:
+            # Utwórz datę wygaśnięcia na podstawie TTL z Redis
+            expires_at = now + datetime.timedelta(seconds=ttl)
+            update_data["$set"]["expires_at"] = expires_at
+        else:
+            # Jeśli klucz nie ma TTL w Redis, usuń ewentualne expires_at w MongoDB
+            update_data["$unset"] = {"expires_at": ""}
         
         self.mongo_collection.update_one(
             {"session_id": session_id, "set_name": set_name},
@@ -246,11 +253,15 @@ class CacheService:
             }
         }
         
-        # Dodaj expires_at jeśli klucz ma czas życia
+        # Pobierz TTL z Redis i ustaw expires_at w MongoDB
         ttl = self.redis_client.ttl(cache_key)
         if ttl > 0:
+            # Utwórz datę wygaśnięcia na podstawie TTL z Redis
             expires_at = now + datetime.timedelta(seconds=ttl)
             update_data["$set"]["expires_at"] = expires_at
+        else:
+            # Jeśli klucz nie ma TTL w Redis, usuń ewentualne expires_at w MongoDB
+            update_data["$unset"] = {"expires_at": ""}
         
         # Zapisz do MongoDB (upsert=True oznacza: zaktualizuj jeśli istnieje, w przeciwnym razie utwórz)
         self.mongo_collection.update_one(
