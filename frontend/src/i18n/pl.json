@@ -13,6 +13,44 @@
     "errorMessage": "Wystąpił błąd podczas przetwarzania Twojego żądania. Spróbuj ponownie.",
     "rate_limit_exceeded": "Przekroczono limit zapytań. Spróbuj ponownie za {{retry_after}}",
     "invalid_or_expired_token": "Nieprawidłowy lub wygasły token.",
-    "generating": "Generowanie..."
+    "generating": "Generowanie...",
+    "Back to Diets": "Powrót do diet",
+    "An error occurred": "Wystąpił błąd",
+    "Diet not found": "Dieta nie została znaleziona",
+    "navigation": {
+      "home": "Strona główna",
+      "diets": "Diety",
+      "favorites": "Ulubione",
+      "cart": "Koszyk",
+      "profile": "Profil",
+      "logout": "Wyloguj",
+      "login": "Zaloguj",
+      "register": "Zarejestruj"
+    },
+    "homepage": {
+      "transformYourHealth": "Odmień swoje zdrowie dzięki profesjonalnemu żywieniu",
+      "customMealPlans": "Spersonalizowane plany żywieniowe dostosowane do Twojego ciała, celów i stylu życia. Doświadcz mocy indywidualnego podejścia do odżywiania.",
+      "browseMealPlans": "Przeglądaj plany żywieniowe",
+      "startYourJourney": "Rozpocznij swoją podróż",
+      "whyChoose": "Dlaczego warto wybrać NutriLife",
+      "whyChooseDescription": "Łączymy naukę o żywieniu z kulinarną doskonałością, aby dostarczać widoczne i odczuwalne rezultaty",
+      "personalizedMealPlans": "Spersonalizowane plany żywieniowe",
+      "personalizedMealPlansDescription": "Indywidualne plany żywieniowe dopasowane do Twoich potrzeb i celów fitness",
+      "premiumQualityIngredients": "Składniki najwyższej jakości",
+      "premiumQualityIngredientsDescription": "Wszystkie posiłki przygotowywane z organicznych, lokalnych składników dla maksymalnej wartości odżywczej",
+      "nutritionistSupport": "Wsparcie dietetyka",
+      "nutritionistSupportDescription": "Dostęp do certyfikowanych dietetyków 24/7, którzy odpowiedzą na wszystkie Twoje pytania",
+      "popularMealPlans": "Popularne plany żywieniowe",
+      "viewAllPlans": "Zobacz wszystkie plany",
+      "successStories": "Historie sukcesu",
+      "successStoriesDescription": "Poznaj historie osób, które odmieniły swoje zdrowie z NutriLife",
+      "testimonial1": "NutriLife całkowicie odmieniło moje podejście do jedzenia. Schudłam 7 kg w dwa miesiące bez uczucia głodu!",
+      "testimonial2": "Jako sportowiec wiem, jak ważne jest odpowiednie odżywianie. Plan diety sportowej znacząco poprawił mój czas regeneracji i poziom energii.",
+      "testimonial3": "Różnorodność posiłków jest niesamowita, a wszystko smakuje wyśmienicie. Nie czuję, że jestem na \"diecie\", mimo że jem zdrowiej niż kiedykolwiek wcześniej.",
+      "readyToTransform": "Gotowy, by odmienić swoje zdrowie?",
+      "readyToTransformDescription": "Dołącz do tysięcy osób, które już poprawiły swoje zdrowie, energię i samopoczucie",
+      "beginYourTransformation": "Rozpocznij swoją przemianę",
+      "heroImageAlt": "Zdrowy posiłek ze świeżymi warzywami i zieleniną"
+    }
 }
   

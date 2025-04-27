@@ -125,13 +125,13 @@ const App = () => {
               onClose={() => handleLanguageClose()}
             >
               <MenuItem onClick={() => handleLanguageClose('en')}>
-                <Flag code="US" height="16" width="24" style={{ marginRight: 8 }} />
-                {t('English')}
-              </MenuItem>
-              <MenuItem onClick={() => handleLanguageClose('pl')}>
-                <Flag code="PL" height="16" width="24" style={{ marginRight: 8 }} />
-                {t('Polish')}
-              </MenuItem>
+  <Flag code="US" height="16" width="24" style={{ marginRight: 8 }} />
+  {t('English')}
+</MenuItem>
+<MenuItem onClick={() => handleLanguageClose('pl')}>
+  <Flag code="PL" height="16" width="24" style={{ marginRight: 8 }} />
+  {t('Polish')}
+</MenuItem>
             </Menu>
             <AppRoutes />
             <GPT sessionToken={sessionToken} setSessionToken={setSessionToken} />
