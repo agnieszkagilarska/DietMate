@@ -4,6 +4,7 @@ import logging
 import threading
 import time
 import queue
+from redis.commands.search.query import Query
 
 def setup_logger(name):
     logger = logging.getLogger(name)
@@ -275,13 +276,13 @@ class CacheService:
         Wyszukuje klucze w pamięci podręcznej według podanych kryteriów.
         """
         query_parts = []
-        
+
         if session_id:
             query_parts.append(f"@session_id:{session_id}")
-            
+
         if set_name:
             query_parts.append(f"@set_name:{set_name}")
-            
+
         if pattern:
             query_parts.append(f"@value:(?i){pattern}*")
             
@@ -302,15 +303,30 @@ class CacheService:
                 item = {
                     "session_id": doc.session_id,
                     "set_name": doc.set_name,
-                    "value": doc.value
+                    "value": doc.value,
+                    "count": None
                 }
-                    
+
+                hash_key = f"hash:{doc.session_id}:{doc.set_name}:{doc.value}"
+                if self.redis_client.exists(hash_key):
+                    count_raw = self.redis_client.hget(hash_key, "count")
+                    if count_raw:
+                        try:
+                            item["count"] = int(count_raw)
+                        except Exception:
+                            item["count"] = 1
+                    else:
+                        item["count"] = 1
+                else:
+                    item["count"] = 1
+
                 items.append(item)
-                
+
             return {
                 "total": results.total,
                 "items": items
             }
+
         except Exception as e:
             self.logger.error(f"Błąd wyszukiwania w Redis Stack: {e}")
             
@@ -339,17 +355,29 @@ class CacheService:
                 key_str = key.decode('utf-8')
                 parts = key_str.split(':', 3)
                 if len(parts) == 4:
+                    session_id_part, set_name_part, value_part = parts[1], parts[2], parts[3]
+                    count = 1
+                    hash_key = f"hash:{session_id_part}:{set_name_part}:{value_part}"
+                    if self.redis_client.exists(hash_key):
+                        count_raw = self.redis_client.hget(hash_key, "count")
+                        if count_raw:
+                            try:
+                                count = int(count_raw)
+                            except Exception:
+                                count = 1
+
                     items.append({
-                        "session_id": parts[1],
-                        "set_name": parts[2],
-                        "value": parts[3]
+                        "session_id": session_id_part,
+                        "set_name": set_name_part,
+                        "value": value_part,
+                        "count": count
                     })
-            
+
             return {
                 "total": total,
                 "items": items
             }
-        
+            
     def get_value(self, session_id, key):
         """
         Pobiera wartość dla klucza z cache (Redis).

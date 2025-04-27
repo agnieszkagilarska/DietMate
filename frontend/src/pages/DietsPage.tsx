@@ -38,7 +38,7 @@ const DietsPage: React.FC = () => {
       } catch (error) {
         console.error('Failed to load favorites:', error);
       } finally {
-        setFavoritesLoading(false); // <<< Po załadowaniu
+        setFavoritesLoading(false);
       }
     };
     loadFavorites();
@@ -57,7 +57,7 @@ const DietsPage: React.FC = () => {
   }, []);
 
   const toggleFavorite = async (_dietId: string, dietName: string) => {
-    const isFavorite = favoriteDiets.includes(dietName); // ✅ dietName, nie _id!
+    const isFavorite = favoriteDiets.includes(dietName);
   
     setFavoriteDiets((prevFavorites) =>
       isFavorite ? prevFavorites.filter((name) => name !== dietName) : [...prevFavorites, dietName]
@@ -118,7 +118,7 @@ const DietsPage: React.FC = () => {
     });
   
     try {
-      await addToCartApi(diet.diet_name); // 🚀 Wywołanie zapytania z tokenem z localStorage
+      await addToCartApi(diet.diet_name);
       setAddToCartMessage(`"${diet.diet_name}" has been added to your cart.`);
     } catch (error) {
       console.error('Failed to sync cart with Redis:', error);
@@ -294,18 +294,18 @@ const DietsPage: React.FC = () => {
                   <button
                     onClick={(e) => {
                       e.preventDefault();
-                      toggleFavorite(diet._id ?? '', diet.diet_name); // Zostawiasz _id do lokalnego toggle, diet_name dla Redis
+                      toggleFavorite(diet._id ?? '', diet.diet_name);
                     }}
                     disabled={favoritesLoading}
                     className={`p-2 bg-white rounded-full shadow-sm ${
-                      favoriteDiets.includes(diet.diet_name)  // <<< TU JEST ZMIANA!
+                      favoriteDiets.includes(diet.diet_name)
                         ? 'text-red-500'
                         : 'text-secondary-400 hover:text-accent-500'
                     }`}
                   >
                     <Heart
                       className="h-5 w-5"
-                      fill={favoriteDiets.includes(diet.diet_name) ? 'currentColor' : 'none'}  // <<< TU TEŻ ZMIANA!
+                      fill={favoriteDiets.includes(diet.diet_name) ? 'currentColor' : 'none'}
                     />
                   </button>
                   </div>

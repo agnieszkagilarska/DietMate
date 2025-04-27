@@ -41,8 +41,8 @@ import { fetchAllDiets } from '../api/diets';
 const loadCartFromRedis = useCallback(async () => {
   try {
     const redisData = await getCartItemsFromRedis();
+    console.log('Redis data:', redisData);
     const allDiets = await fetchAllDiets();
-
     const itemsFromRedis = await Promise.all(
       redisData.items.map(async (entry: any) => {
         const dietName = entry.value;
@@ -53,14 +53,14 @@ const loadCartFromRedis = useCallback(async () => {
           return null;
         }
 
-        const count = await getDietCountInCart(dietName);
+        //const count = await getDietCountInCart(dietName);
 
         return {
           id: dietDetails._id ?? dietName,
           name: dietDetails.diet_name,
           description: dietDetails.description,
           price: dietDetails.price,
-          quantity: count,
+          quantity: entry.count,
           image: dietDetails.imageUrl || '/api/placeholder/400/300',
           duration: 'weekly',
         };
