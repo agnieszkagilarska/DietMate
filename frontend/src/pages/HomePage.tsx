@@ -14,32 +14,25 @@ const HomePage: React.FC = () => {
       .then((data) => {
         setDiets(data);
       })
-      .catch(async (err) => {
+      .catch((err) => {
         console.error('❌ Failed to fetch diets:', err);
       });
   }, []);
-  
 
   const features = [
     {
-      title: t('Personalized Meal Plans'),
-      description: t(
-        'Custom nutrition plans tailored to your unique dietary needs and fitness goals'
-      ),
+      title: t('homepage.personalizedMealPlans'),
+      description: t('homepage.personalizedMealPlansDescription'),
       icon: Heart,
     },
     {
-      title: t('Premium Quality Ingredients'),
-      description: t(
-        'All meals prepared with organic, locally-sourced ingredients for maximum nutrition'
-      ),
+      title: t('homepage.premiumQualityIngredients'),
+      description: t('homepage.premiumQualityIngredientsDescription'),
       icon: Check,
     },
     {
-      title: t('Nutritionist Support'),
-      description: t(
-        'Access to certified nutritionists available 24/7 to answer all your dietary questions'
-      ),
+      title: t('homepage.nutritionistSupport'),
+      description: t('homepage.nutritionistSupportDescription'),
       icon: Star,
     },
   ];
@@ -47,23 +40,17 @@ const HomePage: React.FC = () => {
   const testimonials = [
     {
       name: 'Anna K.',
-      text: t(
-        "NutriLife completely transformed my relationship with food. I've lost 15 pounds in just two months without feeling hungry!"
-      ),
+      text: t('homepage.testimonial1'),
       rating: 5,
     },
     {
       name: 'Marek W.',
-      text: t(
-        'As an athlete, proper nutrition is crucial. Their performance diet plan has significantly improved my recovery time and energy levels.'
-      ),
+      text: t('homepage.testimonial2'),
       rating: 5,
     },
     {
       name: 'Kasia B.',
-      text: t(
-        'The meal variety is amazing, and everything tastes delicious. I never feel like I\'m on a "diet" even though I\'m eating healthier than ever.'
-      ),
+      text: t('homepage.testimonial3'),
       rating: 4,
     },
   ];
@@ -77,33 +64,31 @@ const HomePage: React.FC = () => {
           <div className="absolute inset-0 bg-gradient-to-b from-transparent to-black opacity-20 z-10"></div>
           <img
             src="/images/hero-bg-2.jpg"
-            alt="Healthy meal with fresh vegetables and greens"
+            alt={t('homepage.heroImageAlt')}
             className="w-full h-full object-cover"
           />
         </div>
         <div className="max-w-7xl mx-auto px-4 py-16 sm:px-6 lg:px-8 md:py-24 lg:py-32 relative z-20">
           <div className="lg:w-2/3">
             <h1 className="text-4xl font-bold font-heading tracking-tight sm:text-5xl md:text-6xl">
-              {t('Transform Your Health With Expert Nutrition')}
+              {t('homepage.transformYourHealth')}
             </h1>
             <p className="mt-6 text-xl md:text-2xl max-w-xl">
-              {t(
-                'Custom meal plans designed for your body, goals, and lifestyle. Experience the power of personalized nutrition.'
-              )}
+              {t('homepage.customMealPlans')}
             </p>
             <div className="mt-10 flex flex-col sm:flex-row gap-4">
               <Link
                 to="/diets"
                 className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-primary-700 bg-white hover:bg-primary-50 shadow-button transition-all"
               >
-                {t('Browse Meal Plans')}
+                {t('homepage.browseMealPlans')}
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
               <Link
                 to="/register"
                 className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-accent-500 hover:bg-accent-600 shadow-button transition-all"
               >
-                {t('Start Your Journey')}
+                {t('homepage.startYourJourney')}
               </Link>
             </div>
           </div>
@@ -115,12 +100,10 @@ const HomePage: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <h2 className="text-3xl font-bold font-heading text-secondary-800 sm:text-4xl">
-              {t('Why Choose NutriLife')}
+              {t('homepage.whyChoose')}
             </h2>
             <p className="mt-4 max-w-2xl mx-auto text-xl text-secondary-600">
-              {t(
-                'We combine nutritional science with culinary excellence to deliver results you can see and feel'
-              )}
+              {t('homepage.whyChooseDescription')}
             </p>
           </div>
 
@@ -148,13 +131,13 @@ const HomePage: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center mb-12">
             <h2 className="text-3xl font-bold font-heading text-secondary-800">
-              {t('Popular Meal Plans')}
+              {t('homepage.popularMealPlans')}
             </h2>
             <Link
               to="/diets"
               className="inline-flex items-center text-primary-600 hover:text-primary-700 font-medium"
             >
-              {t('View All Plans')}
+              {t('homepage.viewAllPlans')}
               <ArrowRight className="ml-2 h-5 w-5" />
             </Link>
           </div>
@@ -172,12 +155,10 @@ const HomePage: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <h2 className="text-3xl font-bold font-heading text-secondary-800 sm:text-4xl">
-              {t('Success Stories')}
+              {t('homepage.successStories')}
             </h2>
             <p className="mt-4 max-w-2xl mx-auto text-xl text-secondary-600">
-              {t(
-                'Hear from members who have transformed their health with NutriLife'
-              )}
+              {t('homepage.successStoriesDescription')}
             </p>
           </div>
 
@@ -191,11 +172,7 @@ const HomePage: React.FC = () => {
                   {[...Array(5)].map((_, i) => (
                     <Star
                       key={i}
-                      className={`h-5 w-5 ${
-                        i < testimonial.rating
-                          ? 'fill-current'
-                          : 'text-gray-300'
-                      }`}
+                      className={`h-5 w-5 ${i < testimonial.rating ? 'fill-current' : 'text-gray-300'}`}
                     />
                   ))}
                 </div>
@@ -211,19 +188,17 @@ const HomePage: React.FC = () => {
       <section className="py-16 bg-primary-700 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl font-bold font-heading sm:text-4xl">
-            {t('Ready to Transform Your Health?')}
+            {t('homepage.readyToTransform')}
           </h2>
           <p className="mt-4 max-w-2xl mx-auto text-xl text-primary-100">
-            {t(
-              'Join thousands of members who have already improved their health, energy, and well-being'
-            )}
+            {t('homepage.readyToTransformDescription')}
           </p>
           <div className="mt-10">
             <Link
               to="/register"
               className="inline-flex items-center justify-center px-8 py-4 border border-transparent text-base font-medium rounded-md text-primary-700 bg-white hover:bg-primary-50 shadow-button transition-all"
             >
-              {t('Begin Your Transformation')}
+              {t('homepage.beginYourTransformation')}
             </Link>
           </div>
         </div>

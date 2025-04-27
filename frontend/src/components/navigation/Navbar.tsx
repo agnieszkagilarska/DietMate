@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { ShoppingCart, Menu, X, User, Heart } from 'lucide-react';
+import { ShoppingCart, Menu, X, Heart } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import Logo from '../common/Logo';
 
@@ -26,10 +26,10 @@ const Navbar: React.FC = () => {
   };
 
   const navLinks = [
-    { name: t('Home'), path: '/' },
-    { name: t('Diets'), path: '/diets' },
-    { name: '', path: '/favorites', icon: Heart, iconOnly: true, requiresAuth: true },
-    { name: t('Cart'), path: '/cart', icon: ShoppingCart }
+    { nameKey: 'navigation.home', path: '/' },
+    { nameKey: 'navigation.diets', path: '/diets' },
+    { nameKey: 'navigation.favorites', path: '/favorites', icon: Heart, iconOnly: true, requiresAuth: true },
+    { nameKey: 'navigation.cart', path: '/cart', icon: ShoppingCart }
   ];
 
   return (
@@ -55,7 +55,7 @@ const Navbar: React.FC = () => {
                       ? 'text-primary-700 bg-primary-50'
                       : 'text-secondary-600 hover:text-primary-600 hover:bg-primary-50'
                   }`}
-                  title={link.iconOnly ? t('Favorites') : ''}
+                  title={link.iconOnly ? t(link.nameKey) : ''}
                 >
                   {link.icon ? (
                     link.iconOnly ? (
@@ -63,11 +63,11 @@ const Navbar: React.FC = () => {
                     ) : (
                       <div className="flex items-center">
                         <link.icon className="h-5 w-5 mr-1" />
-                        {link.name}
+                        {t(link.nameKey)}
                       </div>
                     )
                   ) : (
-                    link.name
+                    t(link.nameKey)
                   )}
                 </Link>
               )
@@ -79,7 +79,7 @@ const Navbar: React.FC = () => {
                   onClick={handleLogout}
                   className="px-4 py-2 text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 shadow-button transition-all"
                 >
-                  {t('Logout')}
+                  {t('navigation.logout')}
                 </button>
               ) : (
                 <>
@@ -87,13 +87,13 @@ const Navbar: React.FC = () => {
                     to="/login"
                     className="px-4 py-2 text-sm font-medium rounded-md text-primary-700 hover:bg-primary-50"
                   >
-                    {t('Login')}
+                    {t('navigation.login')}
                   </Link>
                   <Link
                     to="/register"
                     className="px-4 py-2 text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 shadow-button transition-all"
                   >
-                    {t('Register')}
+                    {t('navigation.register')}
                   </Link>
                 </>
               )}
@@ -106,7 +106,7 @@ const Navbar: React.FC = () => {
               <Link
                 to="/favorites"
                 className="mr-2 p-2 rounded-full text-secondary-600 hover:text-primary-600 hover:bg-primary-50"
-                title={t('Favorites')}
+                title={t('navigation.favorites')}
               >
                 <Heart className="h-6 w-6" />
               </Link>
@@ -114,7 +114,7 @@ const Navbar: React.FC = () => {
             <Link
               to="/cart"
               className="mr-2 p-2 rounded-full text-secondary-600 hover:text-primary-600 hover:bg-primary-50"
-              title={t('Cart')}
+              title={t('navigation.cart')}
             >
               <ShoppingCart className="h-6 w-6" />
             </Link>
@@ -149,10 +149,10 @@ const Navbar: React.FC = () => {
                   {link.icon ? (
                     <div className="flex items-center">
                       <link.icon className="h-5 w-5 mr-1" />
-                      {link.name}
+                      {t(link.nameKey)}
                     </div>
                   ) : (
-                    link.name
+                    t(link.nameKey)
                   )}
                 </Link>
               ))}
@@ -163,7 +163,7 @@ const Navbar: React.FC = () => {
                 onClick={() => { handleLogout(); setIsMenuOpen(false); }}
                 className="block w-full text-left px-3 py-2 rounded-md text-base font-medium text-secondary-600 hover:text-primary-600 hover:bg-primary-50"
               >
-                {t('Logout')}
+                {t('navigation.logout')}
               </button>
             ) : (
               <div className="space-y-1">
@@ -172,14 +172,14 @@ const Navbar: React.FC = () => {
                   className="block px-3 py-2 rounded-md text-base font-medium text-secondary-600 hover:text-primary-600 hover:bg-primary-50"
                   onClick={() => setIsMenuOpen(false)}
                 >
-                  {t('Login')}
+                  {t('navigation.login')}
                 </Link>
                 <Link
                   to="/register"
                   className="block px-3 py-2 rounded-md text-base font-medium text-secondary-600 hover:text-primary-600 hover:bg-primary-50"
                   onClick={() => setIsMenuOpen(false)}
                 >
-                  {t('Register')}
+                  {t('navigation.register')}
                 </Link>
               </div>
             )}
