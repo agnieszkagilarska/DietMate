@@ -1,6 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { useEffect } from 'react';
 import {
   ShoppingCart,
   Trash2,
@@ -13,6 +12,17 @@ import {
 import { useCart } from '../context/CartContext';
 import { incrementCartItem, deleteCartItem, getDietCountInCart } from '../api/cart';
 
+const LoadingSpinner = () => {
+  return (
+    <div className="flex items-center justify-center w-full h-full p-8">
+      <div className="flex flex-col items-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-primary-200 border-t-primary-600"></div>
+        <p className="mt-4 text-secondary-600 font-medium">Loading...</p>
+      </div>
+    </div>
+  );
+};
+
 const CartPage: React.FC = () => {
   const { 
     cartItems, 
@@ -21,15 +31,27 @@ const CartPage: React.FC = () => {
     updateCartItemQuantity 
   } = useCart();
 
-  useEffect(() => {
-    loadCartFromRedis();
-  }, [loadCartFromRedis]);
-
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [couponCode, setCouponCode] = useState('');
   const [couponApplied, setCouponApplied] = useState(false);
   const [discountAmount, setDiscountAmount] = useState(0);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isCouponLoading, setIsCouponLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadCart = async () => {
+      setIsInitialLoading(true);
+      try {
+        await loadCartFromRedis();
+      } catch (error) {
+        console.error('Error loading cart:', error);
+      } finally {
+        setIsInitialLoading(false);
+      }
+    };
+    
+    loadCart();
+  }, [loadCartFromRedis]);
 
   const subtotal = cartItems.reduce(
     (sum, item) => sum + item.price * item.quantity,
@@ -42,12 +64,13 @@ const CartPage: React.FC = () => {
 
   const handleQuantityChange = async (id: string, newQuantity: number, name: string) => {
     if (newQuantity < 1) return;
+    
     updateCartItemQuantity(id, newQuantity);
     
     try {
       const increment = newQuantity - cartItems.find(item => item.id === id)?.quantity!;
       if (increment !== 0) {
-        await incrementCartItem(name, increment); // <<< aktualizacja w Redis
+        await incrementCartItem(name, increment);
       }
     } catch (error) {
       console.error('Error updating quantity in Redis:', error);
@@ -55,12 +78,12 @@ const CartPage: React.FC = () => {
   };
 
   const handleRemove = async (id: string, name: string) => {
-    removeFromCart(id); // usuwa lokalnie
+    removeFromCart(id);
   
     try {
-      const countInRedis = await getDietCountInCart(name); // <<< pobranie ile jest w bazie
+      const countInRedis = await getDietCountInCart(name);
       if (countInRedis > 0) {
-        await deleteCartItem(name, countInRedis); // <<< wysłanie prawidłowego count
+        await deleteCartItem(name, countInRedis);
       } else {
         console.warn('No such item found in Redis.');
       }
@@ -74,11 +97,12 @@ const CartPage: React.FC = () => {
       setError('Please enter a coupon code');
       return;
     }
-    setIsLoading(true);
+    
+    setIsCouponLoading(true);
     setError(null);
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 800));
+      await new Promise((resolve) => setTimeout(resolve, 50));
 
       if (couponCode.toLowerCase() === 'diet20') {
         setCouponApplied(true);
@@ -92,9 +116,18 @@ const CartPage: React.FC = () => {
     } catch (err) {
       setError('Failed to apply coupon. Please try again.');
     } finally {
-      setIsLoading(false);
+      setIsCouponLoading(false);
     }
   };
+
+
+  if (isInitialLoading) {
+    return (
+      <div className="min-h-screen bg-primary-50 font-sans flex items-center justify-center">
+        <LoadingSpinner />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-primary-50 font-sans">
@@ -173,7 +206,7 @@ const CartPage: React.FC = () => {
 
                           <div className="flex items-center">
                             <div className="flex items-center mr-4 border border-gray-200 rounded-lg">
-                            <button
+                              <button
                                 onClick={() =>
                                   handleQuantityChange(item.id, item.quantity - 1, item.name)
                                 }
@@ -197,7 +230,7 @@ const CartPage: React.FC = () => {
                             </div>
 
                             <button
-                              onClick={() => handleRemove(item.id, item.name)} // <<< Tylko ID i NAME, bez ilości!
+                              onClick={() => handleRemove(item.id, item.name)}
                               className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
                               aria-label="Remove item"
                             >
@@ -277,13 +310,21 @@ const CartPage: React.FC = () => {
                         onChange={(e) => setCouponCode(e.target.value)}
                         placeholder="Enter promo code"
                         className="flex-1 border border-gray-300 rounded-l-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-secondary-800 transition-all"
+                        disabled={isCouponLoading}
                       />
                       <button
                         onClick={applyCoupon}
-                        disabled={isLoading}
-                        className="bg-gray-100 hover:bg-gray-200 text-secondary-800 font-medium px-4 py-2 rounded-r-lg border border-gray-300 transition-colors"
+                        disabled={isCouponLoading}
+                        className="bg-gray-100 hover:bg-gray-200 text-secondary-800 font-medium px-4 py-2 rounded-r-lg border border-gray-300 transition-colors min-w-20 flex items-center justify-center"
                       >
-                        Apply
+                        {isCouponLoading ? (
+                          <div className="flex items-center">
+                            <div className="animate-spin rounded-full h-4 w-4 border-2 border-primary-600 border-t-transparent"></div>
+                            <span className="ml-2 text-sm">Loading...</span>
+                          </div>
+                        ) : (
+                          'Apply'
+                        )}
                       </button>
                     </div>
 
