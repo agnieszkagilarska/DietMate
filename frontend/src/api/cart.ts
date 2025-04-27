@@ -50,7 +50,7 @@ export const incrementCartItem = async (dietName: string, increment: number) => 
     },
     body: JSON.stringify({
       value: dietName,
-      increment: increment, // +1 lub -1
+      increment: increment, // +1 or -1
     }),
     credentials: 'include',
   });
@@ -130,5 +130,5 @@ export const getCartItemsFromRedis = async () => {
     throw new Error(`Failed to fetch cart items: ${res.status} - ${text}`);
   }
 
-  return res.json();  // to powinno zwrócić prawidłowo TYLKO koszyk
+  return res.json();
 };

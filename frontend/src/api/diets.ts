@@ -10,9 +10,11 @@ export interface Diet {
   category: string;
 }
 
+// @ts-ignore
+const domain = window.REACT_APP_DOMAIN;
+
 export const fetchAllDiets = async (): Promise<Diet[]> => {
   // @ts-ignore
-  const domain = window.REACT_APP_DOMAIN;
   const res = await fetch(`${domain}:5000/api/diets`, {
     credentials: 'include',
   });

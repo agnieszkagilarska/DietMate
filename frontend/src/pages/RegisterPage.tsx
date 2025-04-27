@@ -1,15 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import {
-  User,
-  Lock,
-  Eye,
-  EyeOff,
-  Mail,
-  AlertCircle,
-  UserPlus
-} from 'lucide-react';
-
+import { User, Lock, Eye, EyeOff, Mail, AlertCircle, UserPlus } from 'lucide-react';
+import { registerUser, loginUser } from '../api/auth';
+import ConfettiIcons from '../components/common/ConfettiIcons';
 
 const RegisterPage: React.FC = () => {
   const navigate = useNavigate();
@@ -23,6 +16,11 @@ const RegisterPage: React.FC = () => {
     email: '',
     password: '',
     confirmPassword: '',
+    firstName: '',
+    lastName: '',
+    weight: '',
+    height: '',
+    age: '',
     agreeTerms: false
   });
 
@@ -45,8 +43,7 @@ const RegisterPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Basic validation
-    if (!formValues.username || !formValues.email || !formValues.password) {
+    if (!formValues.username || !formValues.email || !formValues.password || !formValues.firstName || !formValues.lastName || !formValues.weight || !formValues.height || !formValues.age) {
       setError('Please fill in all required fields.');
       return;
     }
@@ -61,25 +58,45 @@ const RegisterPage: React.FC = () => {
       return;
     }
 
+    if (Number(formValues.weight) <= 0 || Number(formValues.height) <= 0 || Number(formValues.age) <= 0) {
+      setError('Please provide valid weight, height, and age.');
+      return;
+    }
+
     try {
       setIsLoading(true);
       setError(null);
 
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      await registerUser({
+        nickname: formValues.username,
+        email: formValues.email,
+        password: formValues.password,
+        first_name: formValues.firstName,
+        last_name: formValues.lastName,
+        weight: Number(formValues.weight),
+        height: Number(formValues.height),
+        age: Number(formValues.age),
+        role: 'user'
+      });
 
-      // In a real app, call actual API here
-      console.log('Registration attempt:', formValues.email);
-      navigate('/dashboard');
-    } catch (err) {
-      setError('Registration failed. Please try again.');
+      const loginRes = await loginUser({
+        email: formValues.email,
+        password: formValues.password
+      });
+
+      localStorage.setItem('token', loginRes.token);
+      localStorage.setItem('user', JSON.stringify(loginRes.user));
+
+      navigate('/');
+    } catch (err: any) {
+      console.error(err);
+      setError(err.message || 'Registration failed. Please try again.');
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleSocialSignup = (provider: string) => {
-    // In a real application, implement social signup logic
     console.log(`Sign up with ${provider}`);
   };
 
@@ -88,7 +105,6 @@ const RegisterPage: React.FC = () => {
       {/* LEFT SECTION: Registration Form */}
       <div className="w-full lg:w-1/2 flex flex-col justify-center p-6 lg:p-12">
         <div className="max-w-md w-full mx-auto">
-          {/* Heading */}
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold font-heading text-secondary-800 tracking-tight">
               Create Your Account
@@ -98,7 +114,6 @@ const RegisterPage: React.FC = () => {
             </p>
           </div>
 
-          {/* Main Card */}
           <div className="bg-white rounded-2xl shadow-card p-8 border border-gray-100">
             {error && (
               <div className="mb-5 p-4 bg-red-50 border border-red-200 rounded-lg flex items-start">
@@ -107,14 +122,9 @@ const RegisterPage: React.FC = () => {
               </div>
             )}
 
-            {/* Registration Form */}
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Username */}
               <div>
-                <label
-                  htmlFor="username"
-                  className="block text-sm font-medium text-secondary-700 mb-1.5"
-                >
+                <label htmlFor="username" className="block text-sm font-medium text-secondary-700 mb-1.5">
                   Username
                 </label>
                 <div className="relative">
@@ -128,20 +138,14 @@ const RegisterPage: React.FC = () => {
                     value={formValues.username}
                     onChange={handleChange}
                     autoComplete="username"
-                    className="w-full pl-11 pr-3 py-3 border border-gray-300 
-                      rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 
-                      focus:border-primary-500 text-secondary-800 shadow-sm transition-all"
+                    className="w-full pl-11 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-secondary-800 shadow-sm transition-all"
                     placeholder="Choose a username"
                   />
                 </div>
               </div>
 
-              {/* Email */}
               <div>
-                <label
-                  htmlFor="email"
-                  className="block text-sm font-medium text-secondary-700 mb-1.5"
-                >
+                <label htmlFor="email" className="block text-sm font-medium text-secondary-700 mb-1.5">
                   Email Address
                 </label>
                 <div className="relative">
@@ -155,20 +159,14 @@ const RegisterPage: React.FC = () => {
                     value={formValues.email}
                     onChange={handleChange}
                     autoComplete="email"
-                    className="w-full pl-11 pr-3 py-3 border border-gray-300 
-                      rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 
-                      focus:border-primary-500 text-secondary-800 shadow-sm transition-all"
+                    className="w-full pl-11 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-secondary-800 shadow-sm transition-all"
                     placeholder="Enter your email address"
                   />
                 </div>
               </div>
 
-              {/* Password */}
               <div>
-                <label
-                  htmlFor="password"
-                  className="block text-sm font-medium text-secondary-700 mb-1.5"
-                >
+                <label htmlFor="password" className="block text-sm font-medium text-secondary-700 mb-1.5">
                   Password
                 </label>
                 <div className="relative">
@@ -182,34 +180,23 @@ const RegisterPage: React.FC = () => {
                     value={formValues.password}
                     onChange={handleChange}
                     autoComplete="new-password"
-                    className="w-full pl-11 pr-11 py-3 border border-gray-300 
-                      rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 
-                      focus:border-primary-500 text-secondary-800 shadow-sm transition-all"
+                    className="w-full pl-11 pr-11 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-secondary-800 shadow-sm transition-all"
                     placeholder="Create a password"
                   />
                   <div className="absolute inset-y-0 right-0 flex items-center pr-3.5">
                     <button
                       type="button"
                       onClick={togglePasswordVisibility}
-                      className="text-secondary-400 hover:text-secondary-500 
-                        focus:outline-none transition-colors"
+                      className="text-secondary-400 hover:text-secondary-500 focus:outline-none transition-colors"
                     >
-                      {showPassword ? (
-                        <EyeOff className="h-5 w-5" />
-                      ) : (
-                        <Eye className="h-5 w-5" />
-                      )}
+                      {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                     </button>
                   </div>
                 </div>
               </div>
 
-              {/* Confirm Password */}
               <div>
-                <label
-                  htmlFor="confirmPassword"
-                  className="block text-sm font-medium text-secondary-700 mb-1.5"
-                >
+                <label htmlFor="confirmPassword" className="block text-sm font-medium text-secondary-700 mb-1.5">
                   Confirm Password
                 </label>
                 <div className="relative">
@@ -223,29 +210,97 @@ const RegisterPage: React.FC = () => {
                     value={formValues.confirmPassword}
                     onChange={handleChange}
                     autoComplete="new-password"
-                    className="w-full pl-11 pr-11 py-3 border border-gray-300 
-                      rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 
-                      focus:border-primary-500 text-secondary-800 shadow-sm transition-all"
+                    className="w-full pl-11 pr-11 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-secondary-800 shadow-sm transition-all"
                     placeholder="Confirm your password"
                   />
                   <div className="absolute inset-y-0 right-0 flex items-center pr-3.5">
                     <button
                       type="button"
                       onClick={toggleConfirmPasswordVisibility}
-                      className="text-secondary-400 hover:text-secondary-500 
-                        focus:outline-none transition-colors"
+                      className="text-secondary-400 hover:text-secondary-500 focus:outline-none transition-colors"
                     >
-                      {showConfirmPassword ? (
-                        <EyeOff className="h-5 w-5" />
-                      ) : (
-                        <Eye className="h-5 w-5" />
-                      )}
+                      {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                     </button>
                   </div>
                 </div>
               </div>
 
-              {/* Terms and Conditions */}
+              {/* Confirm Password */}
+              <div>
+                <label htmlFor="firstName" className="block text-sm font-medium text-secondary-700 mb-1.5">
+                  First Name
+                </label>
+                <input
+                  id="firstName"
+                  name="firstName"
+                  type="text"
+                  value={formValues.firstName}
+                  onChange={handleChange}
+                  className="w-full pl-3 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-secondary-800 shadow-sm transition-all"
+                  placeholder="Enter your first name"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="lastName" className="block text-sm font-medium text-secondary-700 mb-1.5">
+                  Last Name
+                </label>
+                <input
+                  id="lastName"
+                  name="lastName"
+                  type="text"
+                  value={formValues.lastName}
+                  onChange={handleChange}
+                  className="w-full pl-3 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-secondary-800 shadow-sm transition-all"
+                  placeholder="Enter your last name"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="weight" className="block text-sm font-medium text-secondary-700 mb-1.5">
+                  Weight (kg)
+                </label>
+                <input
+                  id="weight"
+                  name="weight"
+                  type="number"
+                  value={formValues.weight}
+                  onChange={handleChange}
+                  className="w-full pl-3 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-secondary-800 shadow-sm transition-all"
+                  placeholder="Enter your weight"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="height" className="block text-sm font-medium text-secondary-700 mb-1.5">
+                  Height (cm)
+                </label>
+                <input
+                  id="height"
+                  name="height"
+                  type="number"
+                  value={formValues.height}
+                  onChange={handleChange}
+                  className="w-full pl-3 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-secondary-800 shadow-sm transition-all"
+                  placeholder="Enter your height"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="age" className="block text-sm font-medium text-secondary-700 mb-1.5">
+                  Age
+                </label>
+                <input
+                  id="age"
+                  name="age"
+                  type="number"
+                  value={formValues.age}
+                  onChange={handleChange}
+                  className="w-full pl-3 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500 text-secondary-800 shadow-sm transition-all"
+                  placeholder="Enter your age"
+                />
+              </div>
+
               <div className="flex items-start">
                 <input
                   id="agreeTerms"
@@ -253,61 +308,30 @@ const RegisterPage: React.FC = () => {
                   type="checkbox"
                   checked={formValues.agreeTerms}
                   onChange={handleChange}
-                  className="h-4 w-4 text-primary-600 focus:ring-primary-500 
-                    border-gray-300 rounded mt-1"
+                  className="h-4 w-4 text-primary-600 focus:ring-primary-500 border-gray-300 rounded mt-1"
                 />
-                <label
-                  htmlFor="agreeTerms"
-                  className="ml-2.5 block text-sm text-secondary-700"
-                >
+                <label htmlFor="agreeTerms" className="ml-2.5 block text-sm text-secondary-700">
                   I agree to the{' '}
-                  <Link
-                    to="/terms"
-                    className="text-primary-600 hover:text-primary-700 font-medium"
-                  >
+                  <Link to="/terms" className="text-primary-600 hover:text-primary-700 font-medium">
                     Terms of Service
                   </Link>{' '}
                   and{' '}
-                  <Link
-                    to="/privacy"
-                    className="text-primary-600 hover:text-primary-700 font-medium"
-                  >
+                  <Link to="/privacy" className="text-primary-600 hover:text-primary-700 font-medium">
                     Privacy Policy
                   </Link>
                 </label>
               </div>
 
-              {/* Submit Button */}
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full py-3.5 px-4 bg-primary-600 hover:bg-primary-700 
-                  text-white font-medium rounded-lg shadow-button transition-all 
-                  flex items-center justify-center disabled:opacity-70 text-base"
+                className="w-full py-3.5 px-4 bg-primary-600 hover:bg-primary-700 text-white font-medium rounded-lg shadow-button transition-all flex items-center justify-center disabled:opacity-70 text-base"
               >
                 {isLoading ? (
-                  <svg
-                    className="animate-spin h-5 w-5 text-white"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0
-                        C5.373 0 0 5.373 0 12h4zm2 
-                        5.291A7.962 7.962 0 014 12H0
-                        c0 3.042 1.135 5.824 3 7.938
-                        l3-2.647z"
+                  <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 
+                      5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                     ></path>
                   </svg>
                 ) : (
@@ -319,7 +343,6 @@ const RegisterPage: React.FC = () => {
               </button>
             </form>
 
-            {/* Divider */}
             <div className="relative flex items-center justify-center my-6">
               <div className="border-t border-gray-200 absolute w-full"></div>
               <div className="bg-white px-4 relative z-10 text-sm text-secondary-500 font-medium">
@@ -327,42 +350,25 @@ const RegisterPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Social Sign Up */}
             <div className="mb-6">
               <button
                 onClick={() => handleSocialSignup('google')}
-                className="w-full flex items-center justify-center py-3 px-4
-                  border border-gray-300 rounded-lg hover:bg-gray-50 transition-all
-                  text-secondary-700 font-medium shadow-sm"
+                className="w-full flex items-center justify-center py-3 px-4 border border-gray-300 rounded-lg hover:bg-gray-50 transition-all text-secondary-700 font-medium shadow-sm"
               >
                 <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24">
-                  <path
-                    fill="currentColor"
-                    d="M12.545,10.239v3.821h5.445
-                    c-0.712,2.315-2.647,3.972-5.445,3.972
-                    c-3.332,0-6.033-2.701-6.033-6.032
-                    s2.701-6.032,6.033-6.032
-                    c1.498,0,2.866,0.549,3.921,1.453
-                    l2.814-2.814C17.503,2.988,15.139,2,12.545,2
-                    C7.021,2,2.543,6.477,2.543,12
-                    s4.478,10,10.002,10
-                    c8.396,0,10.249-7.85,9.426-11.748
-                    L12.545,10.239z"
-                  />
+                  <path fill="currentColor" d="M12.545,10.239v3.821h5.445c-0.712,2.315-2.647,3.972-5.445,3.972
+                      c-3.332,0-6.033-2.701-6.033-6.032s2.701-6.032,6.033-6.032c1.498,0,2.866,0.549,3.921,1.453l2.814-2.814
+                      C17.503,2.988,15.139,2,12.545,2C7.021,2,2.543,6.477,2.543,12s4.478,10,10.002,10c8.396,0,10.249-7.85,9.426-11.748
+                      L12.545,10.239z" />
                 </svg>
                 Continue with Google
               </button>
             </div>
 
-            {/* Sign In Link */}
             <div className="text-center">
               <p className="text-secondary-600">
                 Already have an account?{' '}
-                <Link
-                  to="/login"
-                  className="font-medium text-primary-600 
-                    hover:text-primary-700 transition-colors"
-                >
+                <Link to="/login" className="font-medium text-primary-600 hover:text-primary-700 transition-colors">
                   Sign in
                 </Link>
               </p>
@@ -371,12 +377,13 @@ const RegisterPage: React.FC = () => {
         </div>
       </div>
 
+
       {/* RIGHT SECTION: Branding & Confetti */}
-      <div className="hidden lg:flex w-1/2 flex-col justify-center items-center 
+      <div className="hidden lg:flex w-1/2 flex-col items-center 
         bg-gradient-to-br from-primary-100 to-primary-200 relative overflow-hidden"
       >
-
-        <div className="z-10 text-center px-12 max-w-lg">
+        <ConfettiIcons />
+        <div className="z-10 text-center px-12 py-40 max-w-lg">
           <h2 className="text-4xl font-bold text-secondary-800 mb-4">
             Join <span className="text-primary-600">DietMate</span> Today
           </h2>

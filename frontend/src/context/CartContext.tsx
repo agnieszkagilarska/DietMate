@@ -111,7 +111,7 @@ const loadCartFromRedis = useCallback(async () => {
           updateCartItemQuantity,
           removeFromCart,
           clearCart,
-          loadCartFromRedis, // <<< DODAJ TUTAJ!
+          loadCartFromRedis,
         }}
       >
         {children}
