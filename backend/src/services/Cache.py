@@ -292,11 +292,11 @@ class CacheService:
         
         try:
             try:
-                results = self.redis_client.ft().search(query)[:limit]
+                results = self.redis_client.ft().search(query)
             except Exception as inner_e:
-                self.logger.error(f"Próba alternatywnego wywołania Redis Stack: {inner_e}")
-                # Alternatywna składnia dla niektórych wersji Redis
-                results = self.redis_client.ft().search(query, 0, limit)
+                # self.logger.error(f"Próba alternatywnego wywołania Redis Stack: {inner_e}")
+                # # Alternatywna składnia dla niektórych wersji Redis
+                results = self.redis_client.ft().search(query)
                 
             items = []
             for doc in results.docs:
@@ -328,7 +328,50 @@ class CacheService:
             }
 
         except Exception as e:
-            self.logger.error(f"Błąd wyszukiwania w Redis Stack: {e}")
+            if "no such index" in str(e).lower():
+                # Próba utworzenia indeksu, gdy nie istnieje
+                try:
+                    self.redis_client.ft().create_index([
+                        {"name": "session_id", "type": "TEXT", "sortable": True},
+                        {"name": "set_name", "type": "TEXT", "sortable": True},
+                        {"name": "value", "type": "TEXT", "sortable": True}
+                    ], definition=None)
+                    # Ponowna próba wyszukiwania
+                    results = self.redis_client.ft().search(query)
+                    
+                    # Przetwarzanie wyników po utworzeniu indeksu
+                    items = []
+                    for doc in results.docs:
+                        item = {
+                            "session_id": doc.session_id,
+                            "set_name": doc.set_name,
+                            "value": doc.value,
+                            "count": None
+                        }
+
+                        hash_key = f"hash:{doc.session_id}:{doc.set_name}:{doc.value}"
+                        if self.redis_client.exists(hash_key):
+                            count_raw = self.redis_client.hget(hash_key, "count")
+                            if count_raw:
+                                try:
+                                    item["count"] = int(count_raw)
+                                except Exception:
+                                    item["count"] = 1
+                            else:
+                                item["count"] = 1
+                        else:
+                            item["count"] = 1
+
+                        items.append(item)
+
+                    return {
+                        "total": results.total,
+                        "items": items
+                    }
+                except Exception as create_err:
+                    self.logger.debug(f"Nie udało się utworzyć indeksu: {create_err}")
+            else:
+                self.logger.error(f"Błąd wyszukiwania w Redis Stack: {e}")
             
             # Fallback do prostego wyszukiwania w Redis za pomocą scan
             search_pattern = f"search:{session_id or '*'}:{set_name or '*'}:*"
