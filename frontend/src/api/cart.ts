@@ -11,7 +11,7 @@ export const addToCartApi = async (dietName: string) => {
     throw new Error('No token available! Please start a session.');
   }
 
-  const ttlSeconds = 86400; // 24 godziny
+  const ttlSeconds = 86400; // 24h
 
   const res = await fetch(`${domain}:5000/api/redis/add?set_name=cart`, {
     method: 'POST',
@@ -21,7 +21,7 @@ export const addToCartApi = async (dietName: string) => {
     },
     body: JSON.stringify({
       value: dietName,
-      ttl: ttlSeconds, // <<< Ustawienie TTL na 24h
+      ttl: ttlSeconds,
     }),
     credentials: 'include',
   });
@@ -77,7 +77,7 @@ export const deleteCartItem = async (dietName: string, count: number) => {
     },
     body: JSON.stringify({
       value: dietName,
-      count: count, // <<< podajesz dokładnie ile sztuk ma usunąć
+      count: count,
     }),
     credentials: 'include',
   });
@@ -117,7 +117,7 @@ export const getCartItemsFromRedis = async () => {
   const token = localStorage.getItem('token');
   if (!token) throw new Error('No token available!');
 
-  const res = await fetch(`${domain}:5000/api/redis/search?set_name=cart`, {  // <<< ZAMIANA NA list!
+  const res = await fetch(`${domain}:5000/api/redis/search?set_name=cart`, {
     method: 'GET',
     headers: {
       'Authorization': `Bearer ${token}`,
